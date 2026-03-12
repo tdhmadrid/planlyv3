@@ -474,6 +474,56 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </button>
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
+<!-- ════════════════════════════════════════
+     PANTALLA DE AUTENTICACIÓN
+     ════════════════════════════════════════ -->
+<div id="auth-screen" style="display:flex;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;background:var(--paper);">
+  <div style="width:100%;max-width:420px;padding:48px 32px;">
+
+    <!-- Logo -->
+    <div style="text-align:center;margin-bottom:40px;">
+      <div style="font-family:'Playfair Display',serif;font-size:40px;font-weight:700;color:var(--ink);">Flujo</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);margin-top:4px;">FINANZAS PERSONALES</div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;margin-bottom:28px;border-bottom:1px solid var(--border);">
+      <button id="auth-tab-in" onclick="_authTab('login')" style="flex:1;padding:11px 4px;border:none;border-bottom:2px solid var(--gold);background:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--ink);cursor:pointer;">ENTRAR</button>
+      <button id="auth-tab-up" onclick="_authTab('register')" style="flex:1;padding:11px 4px;border:none;border-bottom:2px solid transparent;background:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;color:var(--muted);cursor:pointer;">REGISTRARSE</button>
+    </div>
+
+    <!-- Name field (solo registro) -->
+    <div id="auth-name-wrap" style="display:none;margin-bottom:16px;">
+      <label style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:6px;">NOMBRE</label>
+      <input id="auth-name" type="text" placeholder="Tu nombre" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);outline:none;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+
+    <!-- Email -->
+    <div style="margin-bottom:16px;">
+      <label style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:6px;">EMAIL</label>
+      <input id="auth-email" type="email" placeholder="tu@email.com" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);outline:none;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')_authSubmit()">
+    </div>
+
+    <!-- Password -->
+    <div style="margin-bottom:24px;">
+      <label style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:6px;">CONTRASEÑA</label>
+      <input id="auth-pass" type="password" placeholder="••••••••" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;background:var(--card);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);outline:none;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')_authSubmit()">
+    </div>
+
+    <!-- Error/info msg -->
+    <div id="auth-msg" style="display:none;margin-bottom:16px;padding:10px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;"></div>
+
+    <!-- Submit -->
+    <button id="auth-btn" onclick="_authSubmit()" style="width:100%;padding:13px;background:var(--gold);border:none;border-radius:8px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:1.5px;color:var(--ink);cursor:pointer;font-weight:500;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">ENTRAR</button>
+
+    <!-- Forgot password -->
+    <div id="auth-forgot-wrap" style="text-align:center;margin-top:16px;">
+      <button onclick="_authForgot()" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;letter-spacing:0.5px;">¿Olvidaste tu contraseña?</button>
+    </div>
+
+  </div>
+</div>
+
 <!-- SIDEBAR -->
 
 
@@ -522,6 +572,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <!-- ──── BACKUP PANEL ──── -->
   <div class="backup-panel">
     <div style="padding:6px 12px 10px;border-top:1px solid rgba(255,255,255,0.07);margin-bottom:8px;">
+    <div id="sb-user-info" style="display:none;margin-bottom:8px;">
+      <div id="sb-user-email" style="font-size:9px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;text-align:center;letter-spacing:0.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px;"></div>
+      <button onclick="flujoSignOut()" style="width:100%;margin-top:5px;padding:4px 8px;background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.3);border-radius:5px;color:rgba(255,255,255,0.5);font-size:9px;font-family:'DM Mono',monospace;cursor:pointer;letter-spacing:0.5px;" onmouseover="this.style.background='rgba(192,57,43,0.4)'" onmouseout="this.style.background='rgba(192,57,43,0.2)'">CERRAR SESIÓN</button>
+    </div>
     <div id="sb-sync-status" style="font-size:10px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;text-align:center;letter-spacing:0.5px;">● sincronizado</div>
   </div>
   <div class="backup-label">Datos</div>
@@ -1857,8 +1911,9 @@ function closeSidebar(){
 // DATA STORAGE
 // ════════════════════════════════════════
 const _DATA_DEF={transactions:[],budgets:[],goals:[],accounts:[],incomeSources:[],expenseProviders:[],transfers:[],investments:[],subscriptions:[],propiedades:[]};
-let _memData=null, _saveTimer=null;
+let _memData=null, _flujoUser=null, _saveTimer=null;
 
+// ── Datos ──────────────────────────────────────────
 function loadData(){
   return Object.assign({},_DATA_DEF,_memData||{});
 }
@@ -1867,25 +1922,134 @@ function saveData(d){
   clearTimeout(_saveTimer);
   _saveTimer=setTimeout(()=>_pushToSupabase(d),700);
 }
-// Tabla personal sin auth — flujo_personal, fila id='owner'
 async function _pushToSupabase(d){
+  if(!_flujoUser)return;
   try{
-    _setSyncStatus('⟳ guardando…', 'rgba(201,168,76,0.8)');
-    const{error}=await _supa.from('flujo_personal').upsert(
-      {id:'owner', data:d, updated_at:new Date().toISOString()},
-      {onConflict:'id'}
+    _setSyncStatus('⟳ guardando…','rgba(201,168,76,0.8)');
+    const{error}=await _supa.from('flujo_data').upsert(
+      {user_id:_flujoUser.id, data:d, updated_at:new Date().toISOString()},
+      {onConflict:'user_id'}
     );
-    if(error){ console.warn('[Flujo] push error:',error.message); _setSyncStatus('⚠ error al guardar','rgba(192,57,43,0.8)'); }
+    if(error){ console.warn('[Flujo] push:',error.message); _setSyncStatus('⚠ error al guardar','rgba(192,57,43,0.8)'); }
     else { _setSyncStatus('● sincronizado','rgba(255,255,255,0.35)'); }
   }catch(e){ console.warn('[Flujo] push:',e); _setSyncStatus('⚠ sin conexión','rgba(192,57,43,0.8)'); }
 }
-async function pullDataFromSupabase(){
+async function _pullFromSupabase(){
+  if(!_flujoUser)return;
   try{
-    const{data,error}=await _supa.from('flujo_personal').select('data').eq('id','owner').maybeSingle();
-    if(error)console.warn('[Flujo] pull error:',error.message);
+    const{data,error}=await _supa.from('flujo_data').select('data').eq('user_id',_flujoUser.id).maybeSingle();
+    if(error)console.warn('[Flujo] pull:',error.message);
     _memData=(data?.data)?Object.assign({},_DATA_DEF,data.data):Object.assign({},_DATA_DEF);
   }catch(e){ _memData=Object.assign({},_DATA_DEF); }
 }
+
+// ── Auth helpers ───────────────────────────────────
+const _AUTH_MSGS={
+  'Invalid login credentials':'Email o contraseña incorrectos.',
+  'Email not confirmed':'Confirma tu email antes de entrar.',
+  'User already registered':'Este email ya tiene una cuenta.',
+  'Password should be at least 6 characters':'La contraseña debe tener al menos 6 caracteres.',
+  'Unable to validate email address: invalid format':'Email inválido.'
+};
+let _authMode='login';
+
+function _authTab(mode){
+  _authMode=mode;
+  const isReg=(mode==='register');
+  document.getElementById('auth-name-wrap').style.display=isReg?'block':'none';
+  document.getElementById('auth-tab-in').style.borderBottomColor=isReg?'transparent':'var(--gold)';
+  document.getElementById('auth-tab-in').style.color=isReg?'var(--muted)':'var(--ink)';
+  document.getElementById('auth-tab-up').style.borderBottomColor=isReg?'var(--gold)':'transparent';
+  document.getElementById('auth-tab-up').style.color=isReg?'var(--ink)':'var(--muted)';
+  document.getElementById('auth-btn').textContent=isReg?'CREAR CUENTA':'ENTRAR';
+  document.getElementById('auth-forgot-wrap').style.display=isReg?'none':'block';
+  document.getElementById('auth-msg').style.display='none';
+}
+
+function _authMsg(msg,ok){
+  const el=document.getElementById('auth-msg');
+  el.textContent=msg;
+  el.style.display='block';
+  el.style.background=ok?'rgba(45,122,79,0.12)':'rgba(192,57,43,0.12)';
+  el.style.color=ok?'var(--green)':'var(--red)';
+  el.style.border='1px solid '+(ok?'rgba(45,122,79,0.3)':'rgba(192,57,43,0.3)');
+}
+
+async function _authSubmit(){
+  const email=document.getElementById('auth-email').value.trim();
+  const pass=document.getElementById('auth-pass').value;
+  const name=document.getElementById('auth-name').value.trim();
+  const btn=document.getElementById('auth-btn');
+  if(!email||!pass){_authMsg('Completa todos los campos.',false);return;}
+  btn.disabled=true; btn.textContent='…';
+  try{
+    if(_authMode==='login'){
+      const{data,error}=await _supa.auth.signInWithPassword({email,password:pass});
+      if(error)throw error;
+      await _onSession(data.user);
+    }else{
+      const opts=name?{data:{full_name:name}}:{};
+      const{data,error}=await _supa.auth.signUp({email,password:pass,options:opts});
+      if(error)throw error;
+      if(data.session){
+        await _onSession(data.user);
+      }else{
+        _authMsg('¡Cuenta creada! Revisa tu email para confirmar antes de entrar.',true);
+        _authTab('login');
+      }
+    }
+  }catch(e){
+    _authMsg(_AUTH_MSGS[e.message]||e.message,false);
+  }finally{
+    btn.disabled=false;
+    btn.textContent=_authMode==='login'?'ENTRAR':'CREAR CUENTA';
+  }
+}
+
+async function _authForgot(){
+  const email=document.getElementById('auth-email').value.trim();
+  if(!email){_authMsg('Escribe tu email primero.',false);return;}
+  const{error}=await _supa.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  if(error){_authMsg(error.message,false);}
+  else{_authMsg('Email de recuperación enviado. Revisa tu bandeja.',true);}
+}
+
+async function flujoSignOut(){
+  await _supa.auth.signOut();
+  _flujoUser=null; _memData=null;
+  document.getElementById('sb-user-info').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+
+async function _onSession(user){
+  _flujoUser=user;
+  const el=document.getElementById('sb-user-email');
+  if(el) el.textContent=user.email||user.id;
+  document.getElementById('sb-user-info').style.display='block';
+  document.getElementById('auth-screen').style.display='none';
+  document.body.style.overflow='';
+  _setSyncStatus('⟳ cargando…','rgba(255,255,255,0.5)');
+  await _pullFromSupabase();
+  refresh();
+  _setSyncStatus('● sincronizado','rgba(255,255,255,0.35)');
+}
+
+// Escuchar cambios de sesión (refresh de página, token expirado, etc.)
+_supa.auth.onAuthStateChange(async(event,session)=>{
+  if(event==='SIGNED_IN'&&session?.user&&!_flujoUser){
+    await _onSession(session.user);
+  }else if(event==='SIGNED_OUT'){
+    _flujoUser=null; _memData=null;
+    document.getElementById('sb-user-info').style.display='none';
+    document.getElementById('auth-screen').style.display='flex';
+    document.body.style.overflow='hidden';
+  }else if(event==='PASSWORD_RECOVERY'){
+    _authTab('login');
+    _authMsg('Introduce tu nueva contraseña.',true);
+  }
+});
+
 
 // ════════════════════════════════════════
 // NAV
@@ -7002,9 +7166,11 @@ function _setSyncStatus(msg, color='rgba(255,255,255,0.35)') {
 }
 
 // ════════════════════════════════════════
-// INIT — sin login, usuario fijo
+// ════════════════════════════════════════
+// INIT — con autenticación
 // ════════════════════════════════════════
 (function(){
+  // Aplicar tema guardado
   loadCustomThemesFromStorage();
   const _t = localStorage.getItem('flujo_theme') || 'classic';
   if(THEMES[_t]){
@@ -7019,12 +7185,17 @@ function _setSyncStatus(msg, color='rgba(255,255,255,0.35)') {
   updateMonthLabel();
   setTxType('expense');
 
-  // Arrancar directamente — carga datos y renderiza
+  // Mostrar pantalla de login hasta verificar sesión
+  document.getElementById('auth-screen').style.display='flex';
+  document.body.style.overflow='hidden';
+
+  // Verificar si ya hay sesión activa
   (async () => {
-    _setSyncStatus('⟳ cargando…', 'rgba(255,255,255,0.5)');
-    await pullDataFromSupabase();
-    refresh();
-    _setSyncStatus('● sincronizado', 'rgba(255,255,255,0.35)');
+    const { data: { session } } = await _supa.auth.getSession();
+    if(session?.user){
+      await _onSession(session.user);
+    }
+    // Si no hay sesión, la pantalla de login ya está visible
   })();
 })();
 
