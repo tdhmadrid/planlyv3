@@ -1,52 +1,54 @@
 -- ═══════════════════════════════════════════════════════════
---  FLUJO — Supabase setup SIN autenticación
---  Tabla personal de acceso público (solo tú usas la app)
---
---  Ejecuta esto en:
---  Supabase Dashboard → SQL Editor → New query → Run
+--  FLUJO — Supabase setup CON autenticación por usuario
+--  Ejecuta esto en: SQL Editor → New query → Run
 -- ═══════════════════════════════════════════════════════════
 
--- 1. Eliminar tabla anterior si existe (versión con auth)
+-- 1. Limpiar tablas anteriores si existen
+drop table if exists public.flujo_personal;
 drop table if exists public.flujo_data;
 
--- 2. Crear tabla personal sin restricciones de usuario
-create table if not exists public.flujo_personal (
-  id          text        primary key default 'owner',
-  data        jsonb       not null default '{}'::jsonb,
-  updated_at  timestamptz not null default now()
+-- 2. Tabla de datos por usuario
+create table public.flujo_data (
+  user_id    uuid        primary key references auth.users(id) on delete cascade,
+  data       jsonb       not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
 );
 
--- 3. Habilitar RLS (requerido por Supabase)
-alter table public.flujo_personal enable row level security;
+-- 3. Row Level Security — cada usuario solo ve sus propios datos
+alter table public.flujo_data enable row level security;
 
--- 4. Política: acceso total para el rol anon (la app usa anon key)
-drop policy if exists "Acceso personal anon" on public.flujo_personal;
-create policy "Acceso personal anon"
-  on public.flujo_personal
-  for all
-  to anon
-  using (id = 'owner')
-  with check (id = 'owner');
+create policy "Select own data"
+  on public.flujo_data for select
+  to authenticated
+  using (auth.uid() = user_id);
 
--- 5. Trigger para updated_at automático
+create policy "Insert own data"
+  on public.flujo_data for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+create policy "Update own data"
+  on public.flujo_data for update
+  to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Delete own data"
+  on public.flujo_data for delete
+  to authenticated
+  using (auth.uid() = user_id);
+
+-- 4. Trigger updated_at
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
+begin new.updated_at = now(); return new; end;
 $$;
 
-drop trigger if exists flujo_personal_updated_at on public.flujo_personal;
-create trigger flujo_personal_updated_at
-  before update on public.flujo_personal
+drop trigger if exists flujo_data_updated_at on public.flujo_data;
+create trigger flujo_data_updated_at
+  before update on public.flujo_data
   for each row execute procedure public.set_updated_at();
 
--- 6. Insertar fila inicial
-insert into public.flujo_personal (id, data)
-values ('owner', '{}'::jsonb)
-on conflict (id) do nothing;
-
 -- ═══════════════════════════════════════════════════════════
---  ✓ Listo. La app puede leer y escribir sin login.
+--  ✓ Listo. Cada usuario tendrá sus propios datos aislados.
 -- ═══════════════════════════════════════════════════════════

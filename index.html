@@ -1912,6 +1912,21 @@ function closeSidebar(){
 // ════════════════════════════════════════
 const _DATA_DEF={transactions:[],budgets:[],goals:[],accounts:[],incomeSources:[],expenseProviders:[],transfers:[],investments:[],subscriptions:[],propiedades:[]};
 let _memData=null, _flujoUser=null, _saveTimer=null;
+const _CACHE_KEY = 'flujo_cache_v1';
+
+// ── Caché local (localStorage) ────────────────────
+function _saveCache(d){
+  try{ localStorage.setItem(_CACHE_KEY, JSON.stringify(d)); }catch(e){}
+}
+function _loadCache(){
+  try{
+    const raw = localStorage.getItem(_CACHE_KEY);
+    return raw ? Object.assign({},_DATA_DEF,JSON.parse(raw)) : null;
+  }catch(e){ return null; }
+}
+function _clearCache(){
+  try{ localStorage.removeItem(_CACHE_KEY); }catch(e){}
+}
 
 // ── Datos ──────────────────────────────────────────
 function loadData(){
@@ -1919,6 +1934,7 @@ function loadData(){
 }
 function saveData(d){
   _memData=d;
+  _saveCache(d);                          // guardar en caché local inmediatamente
   clearTimeout(_saveTimer);
   _saveTimer=setTimeout(()=>_pushToSupabase(d),700);
 }
@@ -1938,9 +1954,14 @@ async function _pullFromSupabase(){
   if(!_flujoUser)return;
   try{
     const{data,error}=await _supa.from('flujo_data').select('data').eq('user_id',_flujoUser.id).maybeSingle();
-    if(error)console.warn('[Flujo] pull:',error.message);
-    _memData=(data?.data)?Object.assign({},_DATA_DEF,data.data):Object.assign({},_DATA_DEF);
-  }catch(e){ _memData=Object.assign({},_DATA_DEF); }
+    if(error){ console.warn('[Flujo] pull:',error.message); return; }
+    if(data?.data){
+      _memData = Object.assign({},_DATA_DEF,data.data);
+      _saveCache(_memData);               // actualizar caché con datos del servidor
+    } else {
+      _memData = Object.assign({},_DATA_DEF);
+    }
+  }catch(e){ console.warn('[Flujo] pull:',e); }
 }
 
 // ── Auth helpers ───────────────────────────────────
@@ -2017,6 +2038,7 @@ async function _authForgot(){
 async function flujoSignOut(){
   await _supa.auth.signOut();
   _flujoUser=null; _memData=null;
+  _clearCache();                          // limpiar caché al cerrar sesión
   document.getElementById('sb-user-info').style.display='none';
   document.getElementById('auth-screen').style.display='flex';
   document.body.style.overflow='hidden';
@@ -2029,9 +2051,24 @@ async function _onSession(user){
   document.getElementById('sb-user-info').style.display='block';
   document.getElementById('auth-screen').style.display='none';
   document.body.style.overflow='';
-  _setSyncStatus('⟳ cargando…','rgba(255,255,255,0.5)');
+
+  // 1. Cargar caché local → renderizar INMEDIATAMENTE sin esperar red
+  const cached = _loadCache();
+  if(cached){
+    _memData = cached;
+    refresh();
+    _setSyncStatus('⟳ sincronizando…','rgba(201,168,76,0.6)');
+  } else {
+    _setSyncStatus('⟳ cargando…','rgba(255,255,255,0.5)');
+  }
+
+  // 2. Pedir datos a Supabase en paralelo (no bloquea UI)
   await _pullFromSupabase();
-  refresh();
+
+  // 3. Re-renderizar solo si los datos del servidor son distintos a la caché
+  if(!cached || JSON.stringify(_memData) !== JSON.stringify(cached)){
+    refresh();
+  }
   _setSyncStatus('● sincronizado','rgba(255,255,255,0.35)');
 }
 
@@ -2041,6 +2078,7 @@ _supa.auth.onAuthStateChange(async(event,session)=>{
     await _onSession(session.user);
   }else if(event==='SIGNED_OUT'){
     _flujoUser=null; _memData=null;
+    _clearCache();
     document.getElementById('sb-user-info').style.display='none';
     document.getElementById('auth-screen').style.display='flex';
     document.body.style.overflow='hidden';
