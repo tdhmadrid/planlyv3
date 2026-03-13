@@ -1849,7 +1849,322 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
+<!-- ════════════════════════════════════════
+     MODAL: SUSCRIPCIONES
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="subscription-modal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-title" id="subs-modal-title">Nueva suscripción</div>
+
+    <!-- Nombre + ícono -->
+    <div class="form-row">
+      <div class="form-group" style="flex:0 0 70px;">
+        <label class="form-label">Ícono</label>
+        <input class="form-input" id="subs-icon" placeholder="📺" style="text-align:center;font-size:18px;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre *</label>
+        <input class="form-input" id="subs-name" placeholder="Netflix, Spotify…">
+      </div>
+    </div>
+
+    <!-- Monto + moneda -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Monto *</label>
+        <input class="form-input" id="subs-amount" type="number" min="0" step="any" placeholder="0.00" oninput="updateSubsFxPreview()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Moneda</label>
+        <select class="form-select" id="subs-currency" onchange="onSubsAccountOrCurrencyChange()"></select>
+      </div>
+    </div>
+
+    <!-- FX section -->
+    <div id="subs-fx-section" style="display:none;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Monto en moneda de la cuenta</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input class="form-input" id="subs-account-amount" type="number" min="0" step="any" placeholder="0.00" oninput="updateSubsFxPreview()" style="flex:1;">
+        <input type="hidden" id="subs-account-currency-label" value="">
+        <button id="subs-fx-flip-btn" class="btn-outline" onclick="flipSubsFxPreview()" style="display:none;padding:6px 10px;font-size:11px;">⇄</button>
+      </div>
+      <div id="subs-fx-preview" style="margin-top:8px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;">Ingresa el monto descontado de la cuenta para ver el TC implícito</div>
+    </div>
+
+    <!-- Frecuencia + próximo cobro -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Frecuencia</label>
+        <select class="form-select" id="subs-freq">
+          <option value="weekly">Semanal</option>
+          <option value="biweekly">Quincenal</option>
+          <option value="monthly" selected>Mensual</option>
+          <option value="bimonthly">Bimestral</option>
+          <option value="quarterly">Trimestral</option>
+          <option value="semiannual">Semestral</option>
+          <option value="annual">Anual</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Próximo cobro</label>
+        <input class="form-input" id="subs-next-charge" type="date">
+      </div>
+    </div>
+
+    <!-- Cuenta -->
+    <div class="form-group">
+      <label class="form-label">Cuenta de cargo</label>
+      <select class="form-select" id="subs-account" onchange="onSubsAccountOrCurrencyChange()"></select>
+    </div>
+
+    <!-- Estado -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select class="form-select" id="subs-status">
+          <option value="active">✅ Activa</option>
+          <option value="trial">🔬 Prueba</option>
+          <option value="paused">⏸ Pausada</option>
+          <option value="cancel_pending">⚠️ Cancelar pronto</option>
+          <option value="cancelled">❌ Cancelada</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Recordatorio</label>
+        <select class="form-select" id="subs-reminder-type">
+          <option value="">Sin recordatorio</option>
+          <option value="cancel">⚠️ Recordar cancelar</option>
+          <option value="review">🔍 Revisar antes de cobro</option>
+          <option value="info">ℹ️ Solo informativo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:-4px;">
+      <label class="form-label">Días de anticipación del recordatorio</label>
+      <input class="form-input" id="subs-reminder-days" type="number" min="1" max="30" value="5">
+    </div>
+
+    <!-- Notas -->
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <input class="form-input" id="subs-notes" placeholder="Opcional">
+    </div>
+
+    <!-- Primer cobro (solo nueva) -->
+    <div id="subs-first-charge-section" style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--muted);">
+        <input type="checkbox" id="subs-has-initial-charge" onchange="toggleSubsInitialCharge()">
+        Registrar cobro inicial ahora
+      </label>
+      <div id="subs-initial-charge-fields" style="display:none;margin-top:10px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Fecha del cobro</label>
+            <input class="form-input" id="subs-charge-date" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Monto cobrado</label>
+            <input class="form-input" id="subs-charge-amount" type="number" min="0" step="any" placeholder="0.00" oninput="updateSubsChargePreview()">
+          </div>
+        </div>
+        <div class="form-group" id="subs-charge-account-amount-row" style="display:none;">
+          <label class="form-label" id="subs-charge-acc-amt-label">Monto en cuenta</label>
+          <input class="form-input" id="subs-charge-account-amount" type="number" min="0" step="any" placeholder="0.00">
+        </div>
+        <div id="subs-charge-preview" style="display:none;padding:8px 12px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:8px;font-size:12px;color:var(--muted);"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSubscriptionModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveSubscription()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MODAL: REPORTES
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="report-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-title">📊 Generar reporte</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Desde (mes)</label>
+        <input class="form-input" id="rpt-from" type="month">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hasta (mes)</label>
+        <input class="form-input" id="rpt-to" type="month">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('report-modal').classList.remove('open')">Cancelar</button>
+      <button class="btn-outline" onclick="exportReportPDF()" style="gap:6px;">🖨 Imprimir / PDF</button>
+      <button class="btn-save" onclick="renderReportAndClose()">Ver reporte</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     MODAL: TEMAS
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="theme-modal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-title">🎨 Temas</div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:18px;">
+      <button id="theme-tab-presets" onclick="switchThemeTab('presets')"
+        style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--gold);background:var(--gold);color:var(--ink);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;font-weight:600;">
+        PRESETS
+      </button>
+      <button id="theme-tab-custom" onclick="switchThemeTab('custom')"
+        style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;font-weight:400;">
+        PERSONALIZADO
+      </button>
+    </div>
+
+    <!-- Panel presets -->
+    <div id="theme-panel-presets">
+      <div id="theme-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:380px;overflow-y:auto;padding-right:4px;"></div>
+    </div>
+
+    <!-- Panel custom -->
+    <div id="theme-panel-custom" style="display:none;">
+      <div id="cp-preview-bar" style="height:28px;border-radius:8px;margin-bottom:16px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <label style="font-size:12px;color:var(--muted);">Fondo <input type="color" id="cp-paper" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Tarjetas <input type="color" id="cp-card" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Texto <input type="color" id="cp-ink" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Crema <input type="color" id="cp-cream" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Borde <input type="color" id="cp-border" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Apagado <input type="color" id="cp-muted" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Acento <input type="color" id="cp-gold" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Verde <input type="color" id="cp-green" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Rojo <input type="color" id="cp-red" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Azul <input type="color" id="cp-blue" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Sidebar <input type="color" id="cp-sidebar" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+        <label style="font-size:12px;color:var(--muted);">Acento sidebar <input type="color" id="cp-sidebar-accent" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre del tema</label>
+        <input class="form-input" id="cp-name" placeholder="Mi tema">
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+        <button class="btn-cancel" onclick="resetCustomEditor()">Resetear</button>
+        <button class="btn-save" onclick="saveCustomTheme()">Guardar tema</button>
+      </div>
+    </div>
+
+    <div style="text-align:right;margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
+      <button class="btn-cancel" onclick="document.getElementById('theme-modal').classList.remove('open')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: DETALLE DE CUENTA
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="account-detail-modal" style="align-items:flex-start;padding-top:40px;">
+  <div class="modal" style="max-width:620px;padding:0;overflow:hidden;border-radius:16px;">
+
+    <!-- Header dinámico (color según cuenta) -->
+    <div id="accdet-header" style="padding:22px 24px 16px;position:relative;">
+      <button onclick="document.getElementById('account-detail-modal').classList.remove('open')"
+        style="position:absolute;top:14px;right:16px;background:rgba(255,255,255,0.15);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:16px;color:rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;">✕</button>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div id="accdet-icon" style="width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;"></div>
+        <div>
+          <div id="accdet-name" style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;"></div>
+          <div id="accdet-meta" style="font-family:'DM Mono',monospace;font-size:11px;margin-top:2px;"></div>
+        </div>
+      </div>
+      <div id="accdet-color-bar" style="position:absolute;bottom:0;left:0;right:0;height:3px;"></div>
+    </div>
+
+    <!-- Cuerpo -->
+    <div style="padding:16px 24px 20px;background:var(--paper);">
+
+      <!-- Estadísticas -->
+      <div id="accdet-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;"></div>
+
+      <!-- Extra para tarjetas de crédito -->
+      <div id="accdet-cc-extra" style="display:none;margin-bottom:12px;"></div>
+
+      <!-- Filtros de transacciones -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+        <select id="accdet-month-filter" class="form-select" style="font-size:12px;padding:5px 10px;flex:1;min-width:130px;" onchange="openAccountDetail(_accdetId)"></select>
+        <select id="accdet-type-filter" class="form-select" style="font-size:12px;padding:5px 10px;flex:1;min-width:110px;" onchange="renderAccdetTx()">
+          <option value="all">Todos</option>
+          <option value="income">Ingresos</option>
+          <option value="expense">Gastos</option>
+          <option value="transfer">Traspasos</option>
+        </select>
+        <span id="accdet-tx-count" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);white-space:nowrap;"></span>
+      </div>
+
+      <!-- Lista de transacciones -->
+      <div id="accdet-tx-list" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════
+     MODAL: CONFIRMAR COBRO DE SUSCRIPCIÓN
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="subs-charge-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title" id="subs-charge-modal-title">Confirmar cobro</div>
+    <div style="background:var(--cream);border-radius:10px;padding:12px 15px;margin-bottom:14px;">
+      <div id="subs-charge-modal-info" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;"></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Fecha del cobro</label>
+        <input class="form-input" id="sc-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monto cobrado</label>
+        <input class="form-input" id="sc-amount" type="number" min="0" step="any" placeholder="0.00" oninput="updateScPreview()">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Cuenta de cargo</label>
+      <select class="form-select" id="sc-account" onchange="updateScPreview()"></select>
+    </div>
+
+    <div id="sc-fx-row" style="display:none;" class="form-group">
+      <label class="form-label" id="sc-acc-amt-label">Monto en cuenta</label>
+      <input class="form-input" id="sc-account-amount" type="number" min="0" step="any" placeholder="0.00" oninput="updateScPreview()">
+    </div>
+
+    <div id="sc-fx-preview" style="display:none;padding:8px 12px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:8px;font-size:12px;color:var(--muted);margin-bottom:10px;font-family:'DM Mono',monospace;"></div>
+
+    <div class="form-group">
+      <label class="form-label">Notas</label>
+      <input class="form-input" id="sc-notes" placeholder="Opcional">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSubsChargeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveSubsCharge()">Confirmar cobro</button>
+    </div>
+  </div>
+</div>
+
+
+
 <script>
+
 // ════════════════════════════════════════
 // CONSTANTS
 // ════════════════════════════════════════
@@ -4175,6 +4490,24 @@ function savePayCredit(){
     isFX,spendCurrency:isFX?ccCurr:null,spendAmount:isFX?payAmt:null,
     confirmed:true,fromCreditPay:true
   });
+  // 4) Avanzar fechas de corte y pago al siguiente ciclo
+  //    Solo si la fecha de pago ya pasó o es hoy (pago confirmado)
+  const _advanceDate = (dateStr, months) => {
+    if(!dateStr) return dateStr;
+    const d = new Date(dateStr + 'T12:00:00');
+    d.setMonth(d.getMonth() + months);
+    return d.toISOString().split('T')[0];
+  };
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  if(cc.creditPayDate){
+    const payDt = new Date(cc.creditPayDate + 'T12:00:00');
+    payDt.setHours(0,0,0,0);
+    if(payDt <= today){
+      cc.creditPayDate = _advanceDate(cc.creditPayDate, 1);
+      if(cc.creditCutDate) cc.creditCutDate = _advanceDate(cc.creditCutDate, 1);
+    }
+  }
   saveData(data);
   closePayCreditModal();
   refresh();
@@ -4517,8 +4850,10 @@ function exportarDatos() {
     const blob = new Blob([json], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
 
-    // Fecha en formato YYYY-MM-DD
-    const hoy = new Date().toISOString().slice(0, 10);
+    // Fecha + hora en formato YYYY-MM-DD_HH-MM
+    const _now = new Date();
+    const _pad = n => String(n).padStart(2,'0');
+    const hoy = `${_now.getFullYear()}-${_pad(_now.getMonth()+1)}-${_pad(_now.getDate())}_${_pad(_now.getHours())}-${_pad(_now.getMinutes())}`;
     const filename = `backup-${APP_NAME}-${hoy}.json`;
 
     const a = document.createElement('a');
@@ -5023,6 +5358,13 @@ function openReportModal(){
   document.getElementById('report-modal').classList.add('open');
 }
 
+function renderReportAndClose(){
+  document.getElementById('report-modal').classList.remove('open');
+  const { data, txs, rangeLabel } = getReportData();
+  showView('reports');
+  renderReportView(data, txs);
+}
+
 // Collect all transactions in the selected month range
 function getReportData(){
   const data = loadData();
@@ -5278,417 +5620,8 @@ function exportReportPDF(){
 .subs-status-stripe{position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px;}
 </style>
   </head><body>${html}
-<!-- ═══════════════════════════════════════════
-     MODAL: CALCULAR HIPOTECA NUEVA
-═══════════════════════════════════════════ -->
-<div class="modal-overlay" id="calc-hipoteca-modal">
-  <div class="modal" style="max-width:580px;">
-    <div class="modal-title">🏠 Calculadora de hipoteca</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Sistema amortización francés · Cuota mensual constante</div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Nombre / descripción *</label>
-        <input class="form-input" id="ch-nombre" placeholder="Ej. Piso en Barcelona"/>
-      </div>
-      <div class="form-group" style="flex:0 0 90px;">
-        <label class="form-label">Moneda</label>
-        <select class="form-select" id="ch-currency"></select>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Precio vivienda *</label>
-        <input class="form-input" id="ch-precio" type="number" placeholder="200000" min="0" step="any" oninput="calcHipoteca()"/>
-      </div>
-      <div class="form-group" style="flex:0 0 190px;">
-        <label class="form-label">País / mercado</label>
-        <select class="form-select" id="ch-pais" onchange="calcHipoteca()">
-          <option value="ES-seg">🇪🇸 España — 2ª mano (ITP ~8%)</option>
-          <option value="ES-nue">🇪🇸 España — nueva (IVA 10%)</option>
-          <option value="MX">🇲🇽 México (ISAI ~2%)</option>
-          <option value="US">🇺🇸 EE.UU. (~1.5%)</option>
-          <option value="CO">🇨🇴 Colombia (~1%)</option>
-          <option value="AR">🇦🇷 Argentina (~1.8%)</option>
-          <option value="PE">🇵🇪 Perú (~3%)</option>
-          <option value="CL">🇨🇱 Chile (~1.5%)</option>
-          <option value="GB">🇬🇧 Reino Unido (~2%)</option>
-          <option value="DE">🇩🇪 Alemania (~5%)</option>
-          <option value="other">🌍 Otro (~3%)</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group" style="flex:0 0 155px;">
-        <label class="form-label">Tipo de hipoteca</label>
-        <select class="form-select" id="ch-tipo" onchange="onChTipoChange()">
-          <option value="fija">Fija</option>
-          <option value="variable">Variable (Euribor+)</option>
-          <option value="mixta">Mixta</option>
-        </select>
-      </div>
-      <div class="form-group" id="ch-fija-field">
-        <label class="form-label">Tipo interés anual (%)</label>
-        <input class="form-input" id="ch-tasa" type="number" placeholder="3.50" min="0" max="30" step="0.01" oninput="calcHipoteca()"/>
-      </div>
-      <div id="ch-variable-fields" style="display:none;flex:1;gap:8px;display:none;">
-        <div class="form-group">
-          <label class="form-label">Euribor (%)</label>
-          <input class="form-input" id="ch-euribor" type="number" placeholder="2.50" step="0.01" oninput="calcHipoteca()"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Diferencial (%)</label>
-          <input class="form-input" id="ch-spread" type="number" placeholder="1.00" step="0.01" oninput="calcHipoteca()"/>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Plazo (años)</label>
-        <input class="form-input" id="ch-plazo" type="number" placeholder="25" min="1" max="40" step="1" oninput="calcHipoteca()"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Enganche / entrada (%)</label>
-        <input class="form-input" id="ch-enganche" type="number" placeholder="20" min="0" max="100" step="0.1" oninput="calcHipoteca()"/>
-        <div style="font-size:9px;color:var(--muted);margin-top:2px;">Mínimo 20% recomendado</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Comisión apertura (%)</label>
-        <input class="form-input" id="ch-apertura" type="number" placeholder="0" min="0" max="5" step="0.1" oninput="calcHipoteca()" value="0"/>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Ingresos netos/mes (opcional)</label>
-        <input class="form-input" id="ch-ingresos" type="number" placeholder="3000" min="0" step="any" oninput="calcHipoteca()"/>
-        <div style="font-size:9px;color:var(--muted);margin-top:2px;">Para verificar ratio ≤35% recomendado por Banco de España</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Amortización extra/año</label>
-        <input class="form-input" id="ch-extra" type="number" placeholder="0" min="0" step="any" oninput="calcHipoteca()" value="0"/>
-        <div style="font-size:9px;color:var(--muted);margin-top:2px;">Simula ahorro en intereses</div>
-      </div>
-    </div>
-
-    <!-- RESULTADO -->
-    <div id="ch-result" style="display:none;margin-top:4px;border-radius:10px;overflow:hidden;border:1px solid var(--border);">
-      <div style="background:var(--blue);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-size:9px;opacity:0.7;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;">Cuota mensual</div>
-          <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;" id="ch-r-cuota">—</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:9px;opacity:0.7;font-family:'DM Mono',monospace;">Plazo · LTV</div>
-          <div style="font-size:12px;font-family:'DM Mono',monospace;font-weight:600;" id="ch-r-plazo">—</div>
-        </div>
-      </div>
-      <div id="ch-r-ratio" style="padding:7px 14px;font-size:11px;border-bottom:1px solid var(--border);background:rgba(44,95,138,0.05);"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;background:var(--cream);">
-        <div style="padding:9px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Enganche</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="ch-r-enganche">—</div></div>
-        <div style="padding:9px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Capital prestado</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="ch-r-capital">—</div></div>
-        <div style="padding:9px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Impuestos</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="ch-r-impuesto">—</div></div>
-        <div style="padding:9px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Notaría·Reg·Gestoría</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="ch-r-notaria">—</div></div>
-        <div style="padding:9px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Comisión apertura</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="ch-r-apertura">—</div></div>
-        <div style="padding:9px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--red);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;font-weight:700;">💰 Desembolso inicial</div><div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:var(--red);" id="ch-r-desembolso">—</div></div>
-        <div style="padding:9px 14px;border-right:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Total intereses</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--red);" id="ch-r-intereses">—</div></div>
-        <div style="padding:9px 14px;"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Total pagado</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="ch-r-total">—</div></div>
-      </div>
-      <div id="ch-r-extra" style="display:none;padding:9px 14px;background:rgba(45,122,79,0.07);border-top:1px solid var(--border);font-size:11px;"></div>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeCalcHipotecaModal()">Cancelar</button>
-      <button class="btn-save" onclick="guardarHipotecaCalculada()" id="ch-btn-guardar" disabled>Guardar hipoteca</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════
-     MODAL: REGISTRAR HIPOTECA EXISTENTE
-═══════════════════════════════════════════ -->
-<div class="modal-overlay" id="add-hipoteca-modal">
-  <div class="modal" style="max-width:520px;">
-    <div class="modal-title">📋 Registrar hipoteca existente</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Solo informativo — registra los datos de tu hipoteca actual para visualizarla.</div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Nombre / propiedad *</label>
-        <input class="form-input" id="ah-nombre" placeholder="Ej. Casa familiar"/>
-      </div>
-      <div class="form-group" style="flex:0 0 90px;">
-        <label class="form-label">Moneda</label>
-        <select class="form-select" id="ah-currency"></select>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Valor actual propiedad</label>
-        <input class="form-input" id="ah-valor" type="number" placeholder="300000" min="0" step="any"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Precio de compra original</label>
-        <input class="form-input" id="ah-precio-compra" type="number" placeholder="280000" min="0" step="any"/>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Capital pendiente (deuda restante) *</label>
-        <input class="form-input" id="ah-deuda" type="number" placeholder="150000" min="0" step="any"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Cuota mensual actual *</label>
-        <input class="form-input" id="ah-cuota" type="number" placeholder="850" min="0" step="any"/>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Tasa interés anual (%)</label>
-        <input class="form-input" id="ah-tasa" type="number" placeholder="3.5" step="0.01"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Años restantes</label>
-        <input class="form-input" id="ah-anos" type="number" placeholder="20" min="1" max="40" step="1"/>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Banco / entidad</label>
-        <input class="form-input" id="ah-banco" placeholder="BBVA, Santander…"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Fecha inicio hipoteca</label>
-        <input class="form-input" id="ah-fecha" type="date"/>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Tipo hipoteca</label>
-        <select class="form-select" id="ah-tipo">
-          <option value="fija">Fija</option>
-          <option value="variable">Variable</option>
-          <option value="mixta">Mixta</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Notas (opcional)</label>
-        <input class="form-input" id="ah-notas" placeholder="Referencia, número contrato…"/>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeAddHipotecaModal()">Cancelar</button>
-      <button class="btn-save" onclick="guardarHipotecaExistente()">Registrar</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- MODAL: NUEVA HIPOTECA -->
-<div class="modal-overlay" id="nueva-hipoteca-modal">
-  <div class="modal" style="max-width:600px;">
-    <div class="modal-title">🏠 Nueva hipoteca — calculadora</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Sistema amortización francés · Cuota mensual constante</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Nombre / descripción *</label>
-        <input class="form-input" id="nh-nombre" placeholder="Ej. Piso calle Mayor"/>
-      </div>
-      <div class="form-group" style="flex:0 0 100px;">
-        <label class="form-label">Moneda</label>
-        <select class="form-select" id="nh-currency"></select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Precio vivienda *</label>
-        <input class="form-input" id="nh-precio" type="number" placeholder="200000" min="0" step="any" oninput="calcNuevaHipoteca()"/>
-      </div>
-      <div class="form-group" style="flex:0 0 200px;">
-        <label class="form-label">País / mercado</label>
-        <select class="form-select" id="nh-pais" onchange="calcNuevaHipoteca()">
-          <option value="ES-seg">🇪🇸 España — 2ª mano (ITP ~8%)</option>
-          <option value="ES-nue">🇪🇸 España — nueva (IVA 10%)</option>
-          <option value="MX">🇲🇽 México (ISAI ~2%)</option>
-          <option value="US">🇺🇸 EE.UU. (~1.5%)</option>
-          <option value="CO">🇨🇴 Colombia (~1%)</option>
-          <option value="AR">🇦🇷 Argentina (~1.8%)</option>
-          <option value="PE">🇵🇪 Perú (~3%)</option>
-          <option value="CL">🇨🇱 Chile (~1.5%)</option>
-          <option value="GB">🇬🇧 Reino Unido (~2%)</option>
-          <option value="DE">🇩🇪 Alemania (~5%)</option>
-          <option value="other">🌍 Otro (~3%)</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group" style="flex:0 0 160px;">
-        <label class="form-label">Tipo hipoteca</label>
-        <select class="form-select" id="nh-tipo" onchange="onNhTipoChange()">
-          <option value="fija">Fija</option>
-          <option value="variable">Variable (Euribor+)</option>
-          <option value="mixta">Mixta</option>
-        </select>
-      </div>
-      <div class="form-group" id="nh-fija-field">
-        <label class="form-label">Tipo interés anual (%)</label>
-        <input class="form-input" id="nh-tasa" type="number" placeholder="3.50" min="0" max="30" step="0.01" oninput="calcNuevaHipoteca()"/>
-      </div>
-      <div id="nh-var-fields" style="display:none;flex:1;gap:8px;">
-        <div class="form-group">
-          <label class="form-label">Euribor (%)</label>
-          <input class="form-input" id="nh-euribor" type="number" placeholder="2.50" step="0.01" oninput="calcNuevaHipoteca()"/>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Diferencial (%)</label>
-          <input class="form-input" id="nh-spread" type="number" placeholder="1.00" step="0.01" oninput="calcNuevaHipoteca()"/>
-        </div>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Plazo (años)</label>
-        <input class="form-input" id="nh-plazo" type="number" placeholder="25" min="1" max="40" step="1" oninput="calcNuevaHipoteca()"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Enganche / entrada (%)</label>
-        <input class="form-input" id="nh-enganche" type="number" placeholder="20" min="0" max="100" step="0.1" oninput="calcNuevaHipoteca()"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Comisión apertura (%)</label>
-        <input class="form-input" id="nh-apertura" type="number" placeholder="0" min="0" max="5" step="0.1" oninput="calcNuevaHipoteca()" value="0"/>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Ingresos netos/mes (opcional)</label>
-        <input class="form-input" id="nh-ingresos" type="number" placeholder="3000" min="0" step="any" oninput="calcNuevaHipoteca()"/>
-        <div style="font-size:9px;color:var(--muted);margin-top:2px;">Para calcular ratio ≤35% recomendado</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Amortización extra/año</label>
-        <input class="form-input" id="nh-extra" type="number" placeholder="0" min="0" step="any" oninput="calcNuevaHipoteca()" value="0"/>
-        <div style="font-size:9px;color:var(--muted);margin-top:2px;">Simula cuánto ahorras pagando más</div>
-      </div>
-    </div>
-    <!-- RESULTADO -->
-    <div id="nh-result" style="display:none;margin-top:8px;border-radius:10px;overflow:hidden;border:1px solid var(--border);">
-      <div style="background:var(--blue);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <div>
-          <div style="font-size:9px;opacity:0.7;font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;">Cuota mensual</div>
-          <div style="font-family:'DM Mono',monospace;font-size:24px;font-weight:700;" id="nh-r-cuota">—</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:9px;opacity:0.7;font-family:'DM Mono',monospace;">Plazo · LTV</div>
-          <div style="font-size:13px;font-family:'DM Mono',monospace;font-weight:600;" id="nh-r-plazo">—</div>
-        </div>
-      </div>
-      <div id="nh-r-ratio" style="padding:7px 14px;font-size:11px;border-bottom:1px solid var(--border);background:rgba(44,95,138,0.05);"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;background:var(--cream);">
-        <div style="padding:9px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Enganche</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="nh-r-enganche">—</div></div>
-        <div style="padding:9px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Capital prestado</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="nh-r-capital">—</div></div>
-        <div style="padding:9px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Impuestos</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="nh-r-impuesto">—</div></div>
-        <div style="padding:9px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Notaría · Reg. · Gestoría</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="nh-r-notaria">—</div></div>
-        <div style="padding:9px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Comisión apertura</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="nh-r-apertura">—</div></div>
-        <div style="padding:9px 14px;border-bottom:1px solid var(--border);"><div style="font-size:9px;color:var(--red);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;font-weight:700;">💰 Desembolso inicial</div><div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:var(--red);" id="nh-r-desembolso">—</div></div>
-        <div style="padding:9px 14px;border-right:1px solid var(--border);"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Total intereses</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--red);" id="nh-r-intereses">—</div></div>
-        <div style="padding:9px 14px;"><div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">Total pagado</div><div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:700;" id="nh-r-total">—</div></div>
-      </div>
-      <div id="nh-r-extra" style="display:none;padding:9px 14px;background:rgba(45,122,79,0.07);border-top:1px solid var(--border);font-size:11px;"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeNuevaHipotecaModal()">Cancelar</button>
-      <button class="btn-save" id="nh-btn-guardar" onclick="guardarNuevaHipoteca()" disabled>Guardar hipoteca</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: AGREGAR HIPOTECA EXISTENTE -->
-<div class="modal-overlay" id="agregar-hipoteca-modal">
-  <div class="modal" style="max-width:520px;">
-    <div class="modal-title">📋 Agregar hipoteca existente</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Solo informativo — registra los datos de tu hipoteca actual para visualizarla.</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Nombre / propiedad *</label>
-        <input class="form-input" id="ah-nombre" placeholder="Ej. Casa familiar"/>
-      </div>
-      <div class="form-group" style="flex:0 0 100px;">
-        <label class="form-label">Moneda</label>
-        <select class="form-select" id="ah-currency"></select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Valor actual vivienda</label>
-        <input class="form-input" id="ah-valor" type="number" placeholder="300000" min="0" step="any"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Precio de compra original</label>
-        <input class="form-input" id="ah-compra" type="number" placeholder="280000" min="0" step="any"/>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Capital pendiente (deuda) *</label>
-        <input class="form-input" id="ah-deuda" type="number" placeholder="150000" min="0" step="any"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Cuota mensual actual *</label>
-        <input class="form-input" id="ah-cuota" type="number" placeholder="850" min="0" step="any"/>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Tasa interés anual (%)</label>
-        <input class="form-input" id="ah-tasa" type="number" placeholder="3.5" step="0.01"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Años restantes</label>
-        <input class="form-input" id="ah-anos" type="number" placeholder="20" min="1" max="40" step="1"/>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Banco / entidad</label>
-        <input class="form-input" id="ah-banco" placeholder="BBVA, Santander…"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Tipo hipoteca</label>
-        <select class="form-select" id="ah-tipo">
-          <option value="fija">Fija</option>
-          <option value="variable">Variable</option>
-          <option value="mixta">Mixta</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Fecha inicio hipoteca</label>
-        <input class="form-input" id="ah-fecha" type="date"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Notas</label>
-        <input class="form-input" id="ah-notas" placeholder="Referencia, número contrato…"/>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeAgregarHipotecaModal()">Cancelar</button>
-      <button class="btn-save" onclick="guardarHipotecaExistente()">Registrar</button>
-    </div>
-  </div>
-</div>
-
 </body></html>`);
+
   printWin.document.close();
   setTimeout(()=>{ printWin.focus(); printWin.print(); }, 700);
 }
@@ -7236,6 +7169,7 @@ function _setSyncStatus(msg, color='rgba(255,255,255,0.35)') {
     // Si no hay sesión, la pantalla de login ya está visible
   })();
 })();
+
 
 
 </script>
