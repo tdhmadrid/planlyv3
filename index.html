@@ -2231,7 +2231,10 @@ const _CACHE_KEY = 'flujo_cache_v1';
 
 // ── Caché local (localStorage) ────────────────────
 function _saveCache(d){
-  try{ localStorage.setItem(_CACHE_KEY, JSON.stringify(d)); }catch(e){}
+  try{
+    localStorage.setItem(_CACHE_KEY, JSON.stringify(d));
+    localStorage.setItem(_CACHE_KEY+'_ts', String(Date.now()));
+  }catch(e){}
 }
 function _loadCache(){
   try{
@@ -2247,34 +2250,56 @@ function _clearCache(){
 function loadData(){
   return Object.assign({},_DATA_DEF,_memData||{});
 }
+// ── Sync: guarda localmente INMEDIATO, sube a Supabase con debounce 1.5s ──
+let _pendingSave = null;
+
 function saveData(d){
-  _memData=d;
-  _saveCache(d);                          // guardar en caché local inmediatamente
+  _memData = d;
+  _saveCache(d);                          // localStorage: instantáneo
+  _setSyncStatus('● local','rgba(201,168,76,0.5)');
+  _pendingSave = d;
   clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(()=>_pushToSupabase(d),700);
+  _saveTimer = setTimeout(_flushToSupabase, 1500);  // debounce 1.5s
 }
-async function _pushToSupabase(d){
-  if(!_flujoUser)return;
+
+// Llama al salir de página para no perder datos
+window.addEventListener('beforeunload', ()=>{ if(_pendingSave) _flushToSupabase(); });
+
+async function _flushToSupabase(){
+  clearTimeout(_saveTimer);
+  if(!_flujoUser || !_pendingSave) return;
+  const d = _pendingSave;
+  _pendingSave = null;
   try{
     _setSyncStatus('⟳ guardando…','rgba(201,168,76,0.8)');
     const{error}=await _supa.from('flujo_data').upsert(
       {user_id:_flujoUser.id, data:d, updated_at:new Date().toISOString()},
       {onConflict:'user_id'}
     );
-    if(error){ console.warn('[Flujo] push:',error.message); _setSyncStatus('⚠ error al guardar','rgba(192,57,43,0.8)'); }
+    if(error){ console.warn('[Flujo] push:',error.message); _setSyncStatus('⚠ error','rgba(192,57,43,0.8)'); }
     else { _setSyncStatus('● sincronizado','rgba(255,255,255,0.35)'); }
-  }catch(e){ console.warn('[Flujo] push:',e); _setSyncStatus('⚠ sin conexión','rgba(192,57,43,0.8)'); }
+  }catch(e){ console.warn('[Flujo] push:',e); _setSyncStatus('⚠ sin conexión','rgba(192,57,43,0.8)'); _pendingSave=d; }
 }
+
 async function _pullFromSupabase(){
-  if(!_flujoUser)return;
+  if(!_flujoUser) return;
   try{
-    const{data,error}=await _supa.from('flujo_data').select('data').eq('user_id',_flujoUser.id).maybeSingle();
+    const{data,error}=await _supa.from('flujo_data')
+      .select('data,updated_at')
+      .eq('user_id',_flujoUser.id)
+      .maybeSingle();
     if(error){ console.warn('[Flujo] pull:',error.message); return; }
     if(data?.data){
-      _memData = Object.assign({},_DATA_DEF,data.data);
-      _saveCache(_memData);               // actualizar caché con datos del servidor
+      // Solo actualiza si el servidor tiene datos más nuevos que la caché
+      const serverTs  = data.updated_at ? new Date(data.updated_at).getTime() : 0;
+      const cacheTs   = parseInt(localStorage.getItem(_CACHE_KEY+'_ts')||'0');
+      if(serverTs >= cacheTs){
+        _memData = Object.assign({},_DATA_DEF,data.data);
+        _saveCache(_memData);
+        localStorage.setItem(_CACHE_KEY+'_ts', String(serverTs));
+      }
     } else {
-      _memData = Object.assign({},_DATA_DEF);
+      if(!_memData) _memData = Object.assign({},_DATA_DEF);
     }
   }catch(e){ console.warn('[Flujo] pull:',e); }
 }
@@ -2367,24 +2392,28 @@ async function _onSession(user){
   document.getElementById('auth-screen').style.display='none';
   document.body.style.overflow='';
 
-  // 1. Cargar caché local → renderizar INMEDIATAMENTE sin esperar red
+  // 1. Caché local → renderizar INMEDIATAMENTE (0ms de espera)
   const cached = _loadCache();
   if(cached){
     _memData = cached;
     refresh();
-    _setSyncStatus('⟳ sincronizando…','rgba(201,168,76,0.6)');
+    _setSyncStatus('⟳ sync…','rgba(201,168,76,0.6)');
   } else {
+    _memData = Object.assign({},_DATA_DEF);
+    refresh();
     _setSyncStatus('⟳ cargando…','rgba(255,255,255,0.5)');
   }
 
-  // 2. Pedir datos a Supabase en paralelo (no bloquea UI)
-  await _pullFromSupabase();
-
-  // 3. Re-renderizar solo si los datos del servidor son distintos a la caché
-  if(!cached || JSON.stringify(_memData) !== JSON.stringify(cached)){
-    refresh();
-  }
-  _setSyncStatus('● sincronizado','rgba(255,255,255,0.35)');
+  // 2. Pull de Supabase en background — NO bloquea la UI
+  _pullFromSupabase().then(()=>{
+    // 3. Re-renderizar solo si los datos cambiaron
+    const snapshotBefore = JSON.stringify(cached);
+    const snapshotAfter  = JSON.stringify(_memData);
+    if(snapshotBefore !== snapshotAfter) refresh();
+    _setSyncStatus('● sincronizado','rgba(255,255,255,0.35)');
+  }).catch(()=>{
+    _setSyncStatus('● local','rgba(201,168,76,0.5)');
+  });
 }
 
 // Escuchar cambios de sesión (refresh de página, token expirado, etc.)
