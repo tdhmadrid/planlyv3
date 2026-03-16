@@ -2801,15 +2801,24 @@ function renderIncomeView(txs,data){
   const s=f.sort((a,b)=>new Date(b.date)-new Date(a.date));
   el.innerHTML=s.length?s.map(t=>txHTML(t,data)).join(''):'<div class="empty"><div class="empty-icon">↑</div><p>Sin ingresos este mes</p></div>';
   // ── Pie: by source ──
-  const bySource={};
+  const bySourceCurr={};
   f.forEach(t=>{
     const src=data.incomeSources.find(s=>s.id===t.sourceId);
     const lbl=src?src.name:(t.sourceId?'Otra fuente':'Sin fuente');
-    bySource[lbl]=(bySource[lbl]||0)+getTxDisplayAmount(t);
+    const accCurr=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';
+    if(!bySourceCurr[lbl]) bySourceCurr[lbl]={};
+    bySourceCurr[lbl][accCurr]=(bySourceCurr[lbl][accCurr]||0)+(t.amount||0);
+  });
+  const priCurr=getPrimaryCurrency(data);
+  const bySource={};
+  Object.entries(bySourceCurr).forEach(([lbl,cMap])=>{
+    bySource[lbl]=cMap[priCurr]||Object.values(cMap)[0]||0;
   });
   const total=Object.values(bySource).reduce((a,b)=>a+b,0);
-  const slices=Object.entries(bySource).sort((a,b)=>b[1]-a[1]).map(([label,value],i)=>({label,value,color:PIE_PALETTE[i%PIE_PALETTE.length]}));
-  const priCurr=getPrimaryCurrency(data);
+  const slices=Object.entries(bySource).sort((a,b)=>b[1]-a[1]).map(([label,value],i)=>({
+    label, value, color:PIE_PALETTE[i%PIE_PALETTE.length],
+    byCurr: bySourceCurr[label]
+  }));
   // Wait for canvas to be in DOM
   // Capture byCurr for Pie FX panel
   const incAllByCurr={};
@@ -2858,14 +2867,26 @@ function renderExpenseView(txs,data){
   el.innerHTML=displayList.length?displayList.map(t=>t.type==='credit_payment'?creditPaymentHTML(t,data):txHTML(t,data)).join(''):'<div class="empty"><div class="empty-icon">↓</div><p>Sin gastos este mes</p></div>';
 
   // ── Pie: by category — always use account-currency amount (t.amount), not FX spendAmount
-  const byCat={};
-  const totalForPie=allExpenses.reduce((s,t)=>s+(t.amount||0),0);
+  // Per-category, per-currency breakdown for the legend
+  const byCatCurr={}; // {cat: {MXN: 100, EUR: 50}}
   allExpenses.forEach(t=>{
     const cat=t.type==='credit_payment'?'Pago tarjeta':t.category;
-    byCat[cat]=(byCat[cat]||0)+(t.amount||0);
+    const accCurr=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';
+    if(!byCatCurr[cat]) byCatCurr[cat]={};
+    byCatCurr[cat][accCurr]=(byCatCurr[cat][accCurr]||0)+(t.amount||0);
   });
-  const expSlices=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([label,value],i)=>({label,value,color:PIE_PALETTE[i%PIE_PALETTE.length]}));
+  // For pie proportions use primary-currency equivalent (sum all amounts as if priCurr)
   const priCurr=getPrimaryCurrency(data);
+  const byCatTotal={};
+  Object.entries(byCatCurr).forEach(([cat,cMap])=>{
+    // Use priCurr amount if exists, else first currency amount (proportions only)
+    byCatTotal[cat]=cMap[priCurr]||Object.values(cMap)[0]||0;
+  });
+  const totalForPie=Object.values(byCatTotal).reduce((s,v)=>s+v,0);
+  const expSlices=Object.entries(byCatTotal).sort((a,b)=>b[1]-a[1]).map(([label,value],i)=>({
+    label, value, color:PIE_PALETTE[i%PIE_PALETTE.length],
+    byCurr: byCatCurr[label]  // carry per-currency amounts for the legend
+  }));
   // Capture byCurr for Pie FX panel
   pieByCurr.expense=byCurr;
   requestAnimationFrame(()=>{
@@ -5027,12 +5048,17 @@ function buildPieLegend(legendId, slices, total, currSymbol){
   const el=document.getElementById(legendId);if(!el)return;
   if(!slices.length){el.innerHTML='<p style="font-size:11px;color:var(--muted);text-align:center;">Sin datos este mes</p>';return;}
   el.innerHTML=slices.map((sl,i)=>{
-    const pct=Math.round((sl.value/total)*100);
+    const pct=total>0?Math.round((sl.value/total)*100):0;
+    // Each slice may carry its own currency (multi-currency accounts)
+    const dispCurr = sl.currency || currSymbol;
+    const amtStr = sl.byCurr
+      ? Object.entries(sl.byCurr).map(([c,v])=>fmt(v,c)).join(' + ')
+      : fmt(sl.value, dispCurr);
     return `<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--cream);">
       <div style="width:10px;height:10px;border-radius:50%;background:${sl.color||PIE_PALETTE[i%PIE_PALETTE.length]};flex-shrink:0;"></div>
       <div style="flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${sl.label}">${sl.label}</div>
-      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);">${pct}%</div>
-      <div style="font-family:'DM Mono',monospace;font-size:10px;font-weight:600;">${fmt(sl.value,currSymbol)}</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);flex-shrink:0;">${pct}%</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;font-weight:600;flex-shrink:0;text-align:right;">${amtStr}</div>
     </div>`;
   }).join('');
 }
@@ -5327,14 +5353,14 @@ function renderPieFxResult(view){
     }
     if(ok)total+=conv;
     const isInput=c!==target;
-    return `<div class="pie-fx-rate-row">
-      <span style="font-family:'DM Mono',monospace;font-size:10px;">${fmt(amount,c)}</span>
-      <span style="display:flex;align-items:center;gap:5px;">
-        ${isInput?`<input type="number" step="any" placeholder="TC" title="1 ${c} = ? ${target}"
-          style="width:72px;padding:3px 6px;font-size:10px;background:var(--cream);border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;"
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);">
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink);flex-shrink:0;">${fmt(amount,c)}</span>
+      <span style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+        ${isInput?`<input type="number" step="any" placeholder="TC" title="1 ${c} → ${target}"
+          style="width:60px;padding:3px 5px;font-size:10px;background:var(--paper);border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;text-align:center;"
           value="${pieFxRates[view][c+'→'+target]||''}"
           oninput="pieFxRates['${view}']['${c}→${target}']=parseFloat(this.value)||0;renderPieFxResult('${view}')" />`:''}
-        <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:${ok?'var(--ink)':'var(--muted)'};">
+        <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:${ok?'var(--ink)':'var(--muted)'};min-width:72px;text-align:right;">
           ${ok?fmt(conv,target):'— TC'}
         </span>
       </span>
