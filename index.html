@@ -716,7 +716,31 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <button class="btn-primary" onclick="openTxModal('expense')"><span>+</span>Nueva</button>
           </div>
         </div>
-        <div id="all-tx-list"><div class="empty"><div class="empty-icon">◌</div><p>Sin transacciones</p></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border);">
+          <div id="all-tx-list" style="border-right:1px solid var(--border);min-height:80px;"><div class="empty"><div class="empty-icon">◌</div><p>Sin transacciones</p></div></div>
+          <!-- Pie chart aside -->
+          <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+              <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Gastos por categoría</span>
+              <button id="tx-fx-toggle" class="add-small" onclick="togglePieFx('tx')" style="font-size:10px;padding:3px 8px;">⇄ TC</button>
+            </div>
+            <canvas id="tx-pie-canvas" width="180" height="180" style="max-width:180px;align-self:center;"></canvas>
+            <div id="tx-pie-legend" style="font-size:11px;"></div>
+            <div id="tx-pie-fx" style="display:none;margin-top:8px;padding:12px;background:var(--cream);border-radius:10px;border:1px solid var(--border);">
+              <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Total consolidado</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+                <label style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);">Moneda:</label>
+                <select id="tx-fx-target" class="form-select" style="flex:1;padding:4px 8px;font-size:12px;" onchange="renderPieFxResult('tx')">
+                  <option value="MXN">MXN</option><option value="USD">USD</option><option value="EUR">EUR</option>
+                </select>
+                <button class="btn-outline" style="padding:4px 8px;font-size:11px;" onclick="flipPieFxPair('tx')" title="Invertir par">⇄</button>
+                <button class="btn-outline" style="padding:4px 8px;font-size:11px;" onclick="fetchPieFxRates('tx')" title="TC automático">↻</button>
+              </div>
+              <div id="tx-pie-fx-rates"></div>
+              <div id="tx-pie-fx-total" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-family:'Playfair Display',serif;font-size:20px;font-weight:700;text-align:right;"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -827,7 +851,32 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           </div>
         </div>
         <div id="cc-charge-summary-bar" style="display:flex;gap:10px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--border);background:rgba(201,168,76,0.04);"></div>
-        <div id="cc-charge-list"><div class="empty"><div class="empty-icon">💳</div><p>Sin cargos de tarjeta este mes</p></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border);">
+          <div id="cc-charge-list" style="min-height:80px;border-right:1px solid var(--border);"><div class="empty"><div class="empty-icon">💳</div><p>Sin cargos de tarjeta este mes</p></div></div>
+          <!-- Pie chart aside -->
+          <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-width:0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+              <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Por categoría</span>
+              <button id="cc-fx-toggle" class="add-small" onclick="togglePieFx('cc-charge')" style="font-size:10px;padding:3px 8px;">⇄ TC</button>
+            </div>
+            <canvas id="cc-charge-pie-canvas" width="180" height="180" style="max-width:180px;align-self:center;"></canvas>
+            <div id="cc-charge-pie-legend" style="font-size:11px;"></div>
+            <!-- FX panel -->
+            <div id="cc-charge-pie-fx" style="display:none;margin-top:8px;padding:12px;background:var(--cream);border-radius:10px;border:1px solid var(--border);">
+              <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Total consolidado</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">
+                <label style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);">Moneda:</label>
+                <select id="cc-charge-fx-target" class="form-select" style="flex:1;padding:4px 8px;font-size:12px;" onchange="renderPieFxResult('cc-charge')">
+                  <option value="MXN">MXN</option><option value="USD">USD</option><option value="EUR">EUR</option>
+                </select>
+                <button class="btn-outline" style="padding:4px 8px;font-size:11px;" onclick="flipPieFxPair('cc-charge')" title="Invertir par">⇄</button>
+                <button class="btn-outline" style="padding:4px 8px;font-size:11px;" onclick="fetchPieFxRates('cc-charge')" title="TC automático">↻</button>
+              </div>
+              <div id="cc-charge-pie-fx-rates"></div>
+              <div id="cc-charge-pie-fx-total" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-family:'Playfair Display',serif;font-size:20px;font-weight:700;text-align:right;"></div>
+            </div>
+          </div>
+        </div>
       </div>
       <!-- Credit card payments this month -->
       <div class="section-card" id="cc-payments-card" style="display:none;">
@@ -914,6 +963,18 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
               <option value="month">Por mes</option>
               <option value="week">Por semana</option>
               <option value="year">Por año</option>
+            </select>
+            <select class="form-select" id="src-year-filter" style="width:auto;padding:5px 9px;font-size:12px;" onchange="renderSourcePeriods()">
+              <option value="all">Todos los años</option>
+            </select>
+            <select class="form-select" id="src-month-filter" style="width:auto;padding:5px 9px;font-size:12px;" onchange="renderSourcePeriods()">
+              <option value="all">Todos los meses</option>
+              <option value="01">Enero</option><option value="02">Febrero</option>
+              <option value="03">Marzo</option><option value="04">Abril</option>
+              <option value="05">Mayo</option><option value="06">Junio</option>
+              <option value="07">Julio</option><option value="08">Agosto</option>
+              <option value="09">Septiembre</option><option value="10">Octubre</option>
+              <option value="11">Noviembre</option><option value="12">Diciembre</option>
             </select>
             <select class="form-select" id="src-period-src" style="width:auto;padding:5px 9px;font-size:12px;" onchange="renderSourcePeriods()">
               <option value="all">Todas las fuentes</option>
@@ -2640,15 +2701,18 @@ function renderPatrimony(data){
   const byC={},countC={},debtC={},creditUsedC={},creditLimitC={};
   // Non-credit accounts → real assets
   data.accounts.filter(a=>a.type!=='credit').forEach(a=>{const c=a.currency||'MXN';byC[c]=(byC[c]||0)+(a.balance||0);countC[c]=(countC[c]||0)+1;});
-  // Credit cards → track used debt separately (not as negative assets)
+  // Credit cards → grouped strictly by card's OWN currency (never mix currencies)
   data.accounts.filter(a=>a.type==='credit').forEach(a=>{
     const c=a.currency||'MXN';
     const limit=a.creditLimit||0;
     const available=a.balance||0;
     const used=Math.max(0,limit-available);
     if(used>0){debtC[c]=(debtC[c]||0)+used;}
-    creditLimitC[c]=(creditLimitC[c]||0)+limit;
-    creditUsedC[c]=(creditUsedC[c]||0)+used;
+    // Each currency bucket is independent — no cross-currency aggregation
+    if(!creditLimitC[c]) creditLimitC[c]=0;
+    if(!creditUsedC[c])  creditUsedC[c]=0;
+    creditLimitC[c]+=limit;
+    creditUsedC[c]+=used;
   });
   const entries=Object.entries(byC).sort((a,b)=>(CRYPTO_CODES.has(a[0])?1:0)-(CRYPTO_CODES.has(b[0])?1:0)||b[1]-a[1]);
   if(!entries.length&&!Object.keys(debtC).length){el.innerHTML='<p style="font-size:12px;color:var(--muted);">Sin saldos</p>';return;}
@@ -2840,11 +2904,71 @@ function renderAllTx(txs,data){
   el.innerHTML=allItems.length
     ? allItems.map(i=>i.html()).join('')
     : '<div class="empty"><div class="empty-icon">◌</div><p>Sin movimientos</p></div>';
+
+  // Draw pie chart with current filtered transactions
+  renderTxPie(txs, data);
 }
 function getMonthTransfers(data){
   return (data.transfers||[]).filter(tr=>{
     const d=new Date(tr.date+'T12:00:00');
     return d.getMonth()===currentDate.getMonth()&&d.getFullYear()===currentDate.getFullYear();
+  });
+}
+
+// ════════════════════════════════════════
+// TX VIEW PIE CHART (expenses only, all months)
+// ════════════════════════════════════════
+function renderTxPie(txs, data) {
+  // Only expense transactions
+  const expTxs = txs.filter(t => t.type === 'expense');
+  if (!expTxs.length) {
+    drawPie('tx-pie-canvas', []);
+    const leg = document.getElementById('tx-pie-legend');
+    if (leg) leg.innerHTML = '<p style="font-size:11px;color:var(--muted);text-align:center;">Sin gastos</p>';
+    return;
+  }
+
+  const byCatCurr = {};
+  expTxs.forEach(t => {
+    const cat = t.category || 'Sin categoría';
+    const accCurr = (data.accounts.find(a => a.id === t.accountId)?.currency) || 'MXN';
+    if (!byCatCurr[cat]) byCatCurr[cat] = {};
+    byCatCurr[cat][accCurr] = (byCatCurr[cat][accCurr] || 0) + (t.amount || 0);
+  });
+
+  const priCurr = getPrimaryCurrency(data);
+  const byCatTotal = {};
+  Object.entries(byCatCurr).forEach(([cat, cMap]) => {
+    byCatTotal[cat] = cMap[priCurr] || Object.values(cMap)[0] || 0;
+  });
+  const totalForPie = Object.values(byCatTotal).reduce((s, v) => s + v, 0);
+  const slices = Object.entries(byCatTotal)
+    .sort((a, b) => b[1] - a[1])
+    .map(([label, value], i) => ({
+      label, value, color: PIE_PALETTE[i % PIE_PALETTE.length],
+      byCurr: byCatCurr[label]
+    }));
+
+  const byCurr = {};
+  expTxs.forEach(t => {
+    const c = (data.accounts.find(a => a.id === t.accountId)?.currency) || 'MXN';
+    byCurr[c] = (byCurr[c] || 0) + (t.amount || 0);
+  });
+  pieByCurr['tx'] = byCurr;
+  pieCatCurr['tx'] = byCatCurr;
+  if (!pieFxRates['tx']) pieFxRates['tx'] = {};
+
+  const isMulti = Object.keys(byCurr).length > 1;
+  const fxPanel = document.getElementById('tx-pie-fx');
+  if (fxPanel && isMulti) fxPanel.style.display = 'block';
+
+  requestAnimationFrame(() => {
+    if (isMulti) {
+      renderPieFxResult('tx');
+    } else {
+      drawPie('tx-pie-canvas', slices);
+      buildPieLegend('tx-pie-legend', slices, totalForPie, priCurr);
+    }
   });
 }
 
@@ -3020,6 +3144,45 @@ function renderCreditChargesView(txs,data){
   } else {
     payCard.style.display='none';
   }
+
+  // ── Pie chart by category (same logic as expense view) ──
+  const ccByCatCurr={};
+  f.forEach(t=>{
+    const cat=t.category||'Sin categoría';
+    const accCurr=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';
+    if(!ccByCatCurr[cat]) ccByCatCurr[cat]={};
+    ccByCatCurr[cat][accCurr]=(ccByCatCurr[cat][accCurr]||0)+(t.amount||0);
+  });
+  const priCurrCC=getPrimaryCurrency(data);
+  const ccByCatTotal={};
+  Object.entries(ccByCatCurr).forEach(([cat,cMap])=>{
+    ccByCatTotal[cat]=cMap[priCurrCC]||Object.values(cMap)[0]||0;
+  });
+  const ccTotalForPie=Object.values(ccByCatTotal).reduce((s,v)=>s+v,0);
+  const ccSlices=Object.entries(ccByCatTotal).sort((a,b)=>b[1]-a[1]).map(([label,value],i)=>({
+    label, value, color:PIE_PALETTE[i%PIE_PALETTE.length],
+    byCurr:ccByCatCurr[label]
+  }));
+
+  // Store for FX conversion
+  const ccByCurr={};
+  f.forEach(t=>{const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';ccByCurr[c]=(ccByCurr[c]||0)+(t.amount||0);});
+  pieByCurr['cc-charge']=ccByCurr;
+  pieCatCurr['cc-charge']=ccByCatCurr;
+  if(!pieFxRates['cc-charge']) pieFxRates['cc-charge']={};
+
+  const isMultiCurrCC=Object.keys(ccByCurr).length>1;
+  const fxPanelCC=document.getElementById('cc-charge-pie-fx');
+  if(fxPanelCC&&isMultiCurrCC) fxPanelCC.style.display='block';
+
+  requestAnimationFrame(()=>{
+    if(isMultiCurrCC){
+      renderPieFxResult('cc-charge');
+    } else {
+      drawPie('cc-charge-pie-canvas',ccSlices);
+      buildPieLegend('cc-charge-pie-legend',ccSlices,ccTotalForPie,priCurrCC);
+    }
+  });
 }
 
 // ════════════════════════════════════════
@@ -5153,6 +5316,8 @@ function renderSourcePeriods(){
   const data=loadData();
   const periodType=document.getElementById('src-period-type')?.value||'month';
   const srcFilter=document.getElementById('src-period-src')?.value||'all';
+  const yearFilter=document.getElementById('src-year-filter')?.value||'all';
+  const monthFilter=document.getElementById('src-month-filter')?.value||'all';
 
   // Populate source filter dropdown
   const sf=document.getElementById('src-period-src');
@@ -5162,13 +5327,26 @@ function renderSourcePeriods(){
       data.incomeSources.map(s=>`<option value="${s.id}"${s.id===cur?' selected':''}>${s.name}</option>`).join('');
   }
 
+  // Populate year filter
+  const yf=document.getElementById('src-year-filter');
+  if(yf){
+    const curY=yf.value;
+    const allInc=data.transactions.filter(t=>t.type==='income');
+    const years=[...new Set(allInc.map(t=>t.date?.slice(0,4)).filter(Boolean))].sort().reverse();
+    yf.innerHTML='<option value="all">Todos los años</option>'+
+      years.map(y=>`<option value="${y}"${y===curY?' selected':''}>${y}</option>`).join('');
+  }
+
+  // Hide month filter when viewing by year
+  const mfWrap=document.getElementById('src-month-filter');
+  if(mfWrap) mfWrap.style.display = periodType==='year' ? 'none' : '';
+
   const allInc=data.transactions.filter(t=>t.type==='income');
-  // Group by period key
+
   function getPeriodKey(dateStr){
     const d=new Date(dateStr+'T12:00:00');
     if(periodType==='year') return d.getFullYear().toString();
     if(periodType==='week'){
-      // ISO week
       const tmp=new Date(d);tmp.setHours(0,0,0,0);
       tmp.setDate(tmp.getDate()+4-(tmp.getDay()||7));
       const yearStart=new Date(tmp.getFullYear(),0,1);
@@ -5185,7 +5363,18 @@ function renderSourcePeriods(){
     return months[parseInt(m)-1]+' '+y;
   }
 
-  const filtered=srcFilter==='all'?allInc:allInc.filter(t=>t.sourceId===srcFilter);
+  // Apply filters
+  let filtered=srcFilter==='all'?allInc:allInc.filter(t=>t.sourceId===srcFilter);
+
+  // Year filter
+  if(yearFilter!=='all'){
+    filtered=filtered.filter(t=>t.date?.startsWith(yearFilter));
+  }
+  // Month filter (only applies when not in "by year" mode)
+  if(monthFilter!=='all' && periodType!=='year'){
+    filtered=filtered.filter(t=>t.date?.slice(5,7)===monthFilter);
+  }
+
   const grouped={};
   filtered.forEach(t=>{
     const k=getPeriodKey(t.date);
@@ -5193,20 +5382,46 @@ function renderSourcePeriods(){
   });
 
   const keys=Object.keys(grouped).sort();
-  const last10=keys.slice(-10); // show last 10 periods
-  const values=last10.map(k=>grouped[k]);
+  const last12=keys.slice(-12);
+  const values=last12.map(k=>grouped[k]);
   const maxVal=Math.max(...values,1);
 
   const el=document.getElementById('src-period-chart');
   if(!el)return;
 
-  if(!last10.length){
-    el.innerHTML='<p style="color:var(--muted);font-size:12px;padding:8px 0;">Sin datos de ingresos</p>';return;
+  if(!last12.length){
+    el.innerHTML='<p style="color:var(--muted);font-size:12px;padding:8px 0;">Sin datos para el período seleccionado</p>';return;
   }
 
-  // Bar chart (horizontal)
+  // Also update the source-items totals to match selected period
+  const incomeSourcesEl=document.getElementById('income-sources-list');
+  if(incomeSourcesEl && data.incomeSources.length){
+    incomeSourcesEl.innerHTML=data.incomeSources.map(src=>{
+      const srcTxs=filtered.filter(t=>t.sourceId===src.id);
+      const total=srcTxs.reduce((s,t)=>s+t.amount,0);
+      const periodLabel=yearFilter!=='all'?(monthFilter!=='all'?`${['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(monthFilter)-1]} ${yearFilter}`:yearFilter):(monthFilter!=='all'?['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][parseInt(monthFilter)-1]:'Todo el período');
+      return `<div class="source-item">
+        <div class="source-avatar" style="background:${strColor(src.name)}">${src.name.charAt(0).toUpperCase()}</div>
+        <div class="source-info">
+          <div class="source-name">${src.name}</div>
+          <div class="source-meta">${SOURCE_TYPE_LABELS[src.type]||src.type} · ${FREQ_LABELS[src.freq]||src.freq}${src.expected?` · Esperado: ${fmt(src.expected)}`:''}</div>
+          ${src.notes?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${src.notes}</div>`:''}
+        </div>
+        <div style="text-align:right;">
+          <div class="source-total">${fmt(total)}</div>
+          <div class="source-count">${srcTxs.length} pago${srcTxs.length!==1?'s':''}</div>
+          <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">${periodLabel}</div>
+        </div>
+        <div style="display:flex;gap:4px;margin-left:8px;">
+          <button class="btn-sm btn-edit" onclick="editIncomeSource('${src.id}')">✎</button>
+          <button class="btn-sm btn-del" onclick="deleteIncomeSource('${src.id}')">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   let html='<div style="padding:4px 0;">';
-  last10.forEach((k,i)=>{
+  last12.forEach((k,i)=>{
     const v=values[i];
     const prev=i>0?values[i-1]:null;
     const pct=Math.round((v/maxVal)*100);
@@ -5400,9 +5615,9 @@ function deleteInvestment(id){
 // ════════════════════════════════════════
 // PIE FX CONVERTER
 // ════════════════════════════════════════
-let pieFxRates={income:{},expense:{}};  // {EUR→MXN: 21.5} — persisten en sesión
-let pieByCurr={income:{},expense:{}};   // {MXN: total, EUR: total}
-let pieCatCurr={income:{},expense:{}};  // {cat: {MXN: amt, EUR: amt}}
+let pieFxRates={income:{},expense:{},'cc-charge':{},'tx':{}};  // {EUR→MXN: 21.5} — persisten en sesión
+let pieByCurr={income:{},expense:{},'cc-charge':{},'tx':{}};   // {MXN: total, EUR: total}
+let pieCatCurr={income:{},expense:{},'cc-charge':{},'tx':{}};  // {cat: {MXN: amt, EUR: amt}}
 
 function togglePieFx(view){
   const panel=document.getElementById(view+'-pie-fx');
