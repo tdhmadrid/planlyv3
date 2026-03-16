@@ -606,10 +606,40 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <!-- DASHBOARD -->
     <div id="view-dashboard" class="view active">
       <div class="stats-grid">
+        <!-- Header row with TC selector -->
+        <div id="stat-tc-header" style="grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-bottom:-4px;">
+          <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;">VER EN</span>
+          <select id="stat-fx-target" class="form-select" style="padding:3px 8px;font-size:11px;width:auto;" onchange="refreshStatCards()">
+            <option value="">— Original —</option>
+          </select>
+          <span id="stat-tc-wrap" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;"></span>
+        </div>
         <div class="stat-card income"><div class="stat-label">Ingresos del mes</div><div id="total-income-wrap"><div class="stat-amount income">$0</div></div><div class="stat-sub" id="income-count">0 transacciones</div></div>
         <div class="stat-card expense"><div class="stat-label">Gastos del mes</div><div id="total-expense-wrap"><div class="stat-amount expense">$0</div></div><div class="stat-sub" id="expense-count">0 transacciones</div></div>
         <div class="stat-card balance"><div class="stat-label">Balance neto</div><div id="net-balance-wrap"><div class="stat-amount balance">$0</div></div><div class="stat-sub" id="savings-rate">Tasa de ahorro: 0%</div></div>
       </div>
+
+      <!-- ── RESUMEN RÁPIDO ── -->
+      <div id="dash-summary-strip" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+
+        <!-- Suscripciones — solo monto mensual -->
+        <div onclick="showView('subscriptions')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 14px rgba(0,0,0,0.07)'" onmouseout="this.style.boxShadow=''">
+          <span style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Suscripciones / mes</span>
+          <div id="dash-subs-amount" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--red);line-height:1;">—</div>
+          <div id="dash-subs-warning" style="display:none;font-size:10px;color:var(--gold);font-family:'DM Mono',monospace;"></div>
+        </div>
+
+        <!-- Presupuesto — solo porcentaje -->
+        <div onclick="showView('budget')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 14px rgba(0,0,0,0.07)'" onmouseout="this.style.boxShadow=''">
+          <span style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Presupuesto del mes</span>
+          <div id="dash-budget-pct" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;line-height:1;color:var(--ink);">—</div>
+          <div style="background:var(--cream);border-radius:99px;height:4px;overflow:hidden;">
+            <div id="dash-budget-bar" style="height:100%;border-radius:99px;width:0%;transition:width .6s ease;background:var(--green);"></div>
+          </div>
+        </div>
+
+      </div>
+
       <div class="patrimony-card">
         <div class="patrimony-header">
           <span class="patrimony-title">Patrimonio total por moneda</span>
@@ -2492,40 +2522,36 @@ function refresh(){
   const incTxs=txs.filter(t=>t.type==='income');
   const expTxs=txs.filter(t=>t.type==='expense');
 
-  // Group by SPEND currency (for expenses) or account currency (for income)
-  // For stats we show totals by the "spend currency" of each transaction
+  // Group by display currency
   const incByCurr={},expByCurr={};
   incTxs.forEach(t=>{const c=getTxDisplayCurrency(t,data);incByCurr[c]=(incByCurr[c]||0)+getTxDisplayAmount(t);});
   expTxs.forEach(t=>{const c=getTxDisplayCurrency(t,data);expByCurr[c]=(expByCurr[c]||0)+getTxDisplayAmount(t);});
 
-  // Primary currency = most used or MXN (kept for other uses)
+  // Store globally so refreshStatCards() can re-use without re-computing
+  window._statIncByCurr = incByCurr;
+  window._statExpByCurr = expByCurr;
+
   const priCurr=getPrimaryCurrency(data);
 
-  // ── Stat cards: show each currency large, no "Multi" label ──
-  const renderStatWrap=(byC,cls)=>{
-    const entries=Object.entries(byC);
-    if(!entries.length)return`<div class="stat-amount ${cls}">$0</div>`;
-    if(entries.length===1){const[c,v]=entries[0];return`<div class="stat-amount ${cls}">${cls==='income'?'+':'−'}${fmt(v,c)}</div>`;}
-    return`<div class="stat-multi">${entries.map(([c,v])=>`<div class="stat-multi-row ${cls}">${cls==='income'?'+':'−'}${fmt(v,c)}</div>`).join('')}</div>`;
-  };
-  document.getElementById('total-income-wrap').innerHTML=renderStatWrap(incByCurr,'income');
-  document.getElementById('total-expense-wrap').innerHTML=renderStatWrap(expByCurr,'exp');
-  // balance per currency
-  const allCurrs=new Set([...Object.keys(incByCurr),...Object.keys(expByCurr)]);
-  const balByCurr={};allCurrs.forEach(c=>{const b=(incByCurr[c]||0)-(expByCurr[c]||0);balByCurr[c]=b;});
-  const balEntries=Object.entries(balByCurr);
-  const multiCurr=balEntries.length>1;
-  let balHTML='';
-  if(balEntries.length===1){const[c,v]=balEntries[0];balHTML=`<div class="stat-amount balance" style="color:${v>=0?'var(--green)':'var(--red)'}">${v>=0?'+':''}${fmt(v,c)}</div>`;}
-  else if(balEntries.length>1){balHTML=`<div class="stat-multi">${balEntries.map(([c,v])=>`<div class="stat-multi-row ${v>=0?'pos':'neg'}">${v>=0?'+':''}${fmt(v,c)}</div>`).join('')}</div>`;}
-  else balHTML=`<div class="stat-amount balance">$0</div>`;
-  document.getElementById('net-balance-wrap').innerHTML=balHTML;
+  // Populate TC currency selector with all currencies present
+  const statSel = document.getElementById('stat-fx-target');
+  if(statSel){
+    const allStatCurrs = [...new Set([...Object.keys(incByCurr),...Object.keys(expByCurr)])];
+    const prevVal = statSel.value;
+    statSel.innerHTML = '<option value="">— Original —</option>' +
+      allStatCurrs.map(c=>`<option value="${c}"${c===prevVal?' selected':''}>${c}</option>`).join('');
+    // Show TC input only when foreign currencies need converting
+    const target = statSel.value;
+    const needsTC = target && allStatCurrs.some(c=>c!==target);
+    const tcWrap = document.getElementById('stat-tc-wrap');
+    if(tcWrap) tcWrap.style.display = needsTC ? 'flex' : 'none';
+  }
+
+  // Render stat cards (uses TC if set)
+  renderStatCards(incByCurr, expByCurr);
+
   document.getElementById('income-count').textContent=incTxs.length+' transacción'+(incTxs.length!==1?'es':'');
   document.getElementById('expense-count').textContent=expTxs.length+' transacción'+(expTxs.length!==1?'es':'');
-  const totalInc=Object.values(incByCurr).reduce((s,v)=>s+v,0);
-  const totalExp=Object.values(expByCurr).reduce((s,v)=>s+v,0);
-  const savRate=totalInc>0?Math.round(((totalInc-totalExp)/totalInc)*100):0;
-  document.getElementById('savings-rate').textContent=multiCurr?'Ver patrimonio abajo':'Tasa de ahorro: '+savRate+'%';
 
   const _safeRender=(fn,label)=>{try{fn();}catch(e){console.error('render error ['+label+']:',e.message);}};
   _safeRender(()=>renderPatrimony(data),'patrimony');
@@ -2537,6 +2563,7 @@ function refresh(){
   _safeRender(()=>renderReportView(data,txs),'report');
   _safeRender(()=>renderCategoryBreakdown(expTxs,data),'catBreakdown');
   _safeRender(()=>renderBudgets(data,expTxs),'budgets');
+  _safeRender(()=>renderDashSummary(data,expTxs),'dashSummary');
   _safeRender(()=>renderGoals(data),'goals');
   _safeRender(()=>renderAccounts(data),'accounts');
   _safeRender(()=>renderIncomeSources(data),'incomeSources');
@@ -7296,6 +7323,195 @@ function _setSyncStatus(msg, color='rgba(255,255,255,0.35)') {
 // ════════════════════════════════════════
 // ════════════════════════════════════════
 // INIT — con autenticación
+// ════════════════════════════════════════
+// STAT CARDS — TC-aware rendering
+// ════════════════════════════════════════
+function renderStatCards(incByCurr, expByCurr) {
+  const sel    = document.getElementById('stat-fx-target');
+  const target = sel?.value || '';
+  const tc     = parseFloat(document.getElementById('stat-tc-input')?.value) || 0;
+  const tcWrap = document.getElementById('stat-tc-wrap');
+
+  const allCurrs = [...new Set([...Object.keys(incByCurr), ...Object.keys(expByCurr)])];
+  const needsTC  = target && allCurrs.some(c => c !== target);
+  if (tcWrap) tcWrap.style.display = needsTC ? 'flex' : 'none';
+
+  // Conversion helper: returns null if TC missing
+  // Build per-pair TC inputs inside stat-tc-wrap (without losing focus)
+  if (tcWrap && target) {
+    const foreignCurrs = allCurrs.filter(c => c !== target);
+    // Only rebuild if the pairs changed (not on every keystroke)
+    const currentPairs = [...tcWrap.querySelectorAll('input')].map(i => i.dataset.pair);
+    const newPairs = foreignCurrs.map(c => c+'→'+target);
+    if (JSON.stringify(currentPairs) !== JSON.stringify(newPairs)) {
+      tcWrap.innerHTML = foreignCurrs.map(c => {
+        const storedRate = window._statRates?.[c+'→'+target] || '';
+        return `<span style="display:flex;align-items:center;gap:3px;">
+          <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);">1 ${c}=</span>
+          <input data-pair="${c}→${target}" type="number" step="any" placeholder="TC"
+            style="width:64px;padding:3px 6px;font-size:11px;background:var(--cream);border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;text-align:center;"
+            value="${storedRate}"
+            oninput="if(!window._statRates)window._statRates={};window._statRates['${c}→${target}']=parseFloat(this.value)||0;refreshStatCards();">
+          <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);">${target}</span>
+        </span>`;
+      }).join('');
+    }
+  }
+
+  // Get rates from inputs
+  if (!window._statRates) window._statRates = {};
+
+  const getRate = (fromCurr) => {
+    if (!target || fromCurr === target) return 1;
+    return window._statRates[fromCurr+'→'+target] || 0;
+  };
+
+  const convertMap = (byC) => {
+    if (!target) return byC;
+    let total = 0, allOk = true;
+    for (const [c, v] of Object.entries(byC)) {
+      const r = getRate(c);
+      if (c !== target && !r) { allOk = false; break; }
+      total += v * (c === target ? 1 : r);
+    }
+    if (!allOk) return byC;
+    return { [target]: total };
+  };
+
+  const incConverted = convertMap(incByCurr);
+  const expConverted = convertMap(expByCurr);
+
+  const renderWrap = (byC, cls) => {
+    const entries = Object.entries(byC);
+    if (!entries.length) return `<div class="stat-amount ${cls}">$0</div>`;
+    if (entries.length === 1) {
+      const [c,v] = entries[0];
+      return `<div class="stat-amount ${cls}">${cls==='income'?'+':'−'}${fmt(v,c)}</div>`;
+    }
+    return `<div class="stat-multi">${entries.map(([c,v])=>
+      `<div class="stat-multi-row ${cls}">${cls==='income'?'+':'−'}${fmt(v,c)}</div>`
+    ).join('')}</div>`;
+  };
+
+  document.getElementById('total-income-wrap').innerHTML = renderWrap(incConverted, 'income');
+  document.getElementById('total-expense-wrap').innerHTML = renderWrap(expConverted, 'exp');
+
+  // Balance
+  const allCurrsConv = new Set([...Object.keys(incConverted), ...Object.keys(expConverted)]);
+  const balByCurr = {};
+  allCurrsConv.forEach(c => {
+    const b = (incConverted[c]||0) - (expConverted[c]||0);
+    balByCurr[c] = b;
+  });
+  const balEntries = Object.entries(balByCurr);
+  const multiCurr  = balEntries.length > 1;
+  let balHTML = '';
+  if (balEntries.length === 1) {
+    const [c,v] = balEntries[0];
+    balHTML = `<div class="stat-amount balance" style="color:${v>=0?'var(--green)':'var(--red)'}">
+      ${v>=0?'+':''}${fmt(v,c)}</div>`;
+  } else if (balEntries.length > 1) {
+    balHTML = `<div class="stat-multi">${balEntries.map(([c,v])=>
+      `<div class="stat-multi-row ${v>=0?'pos':'neg'}">${v>=0?'+':''}${fmt(v,c)}</div>`
+    ).join('')}</div>`;
+  } else {
+    balHTML = `<div class="stat-amount balance">$0</div>`;
+  }
+  document.getElementById('net-balance-wrap').innerHTML = balHTML;
+
+  // Savings rate
+  const totalInc = Object.values(incConverted).reduce((s,v)=>s+v, 0);
+  const totalExp = Object.values(expConverted).reduce((s,v)=>s+v, 0);
+  const savRate  = totalInc > 0 ? Math.round(((totalInc-totalExp)/totalInc)*100) : 0;
+  const srEl = document.getElementById('savings-rate');
+  if (srEl) srEl.textContent = multiCurr ? 'Ver patrimonio abajo' : `Tasa de ahorro: ${savRate}%`;
+}
+
+function refreshStatCards() {
+  // Called from TC selector / input changes — re-render using stored data
+  const incByCurr = window._statIncByCurr || {};
+  const expByCurr = window._statExpByCurr || {};
+  renderStatCards(incByCurr, expByCurr);
+}
+
+
+// ════════════════════════════════════════
+// DASHBOARD SUMMARY STRIP
+// ════════════════════════════════════════
+function renderDashSummary(data, expTxs) {
+  // ── Suscripciones: solo monto mensual ──
+  const subs   = data.subscriptions || [];
+  const active = subs.filter(s => s.status === 'active' || s.status === 'trial');
+
+  const amtEl  = document.getElementById('dash-subs-amount');
+  const warnEl = document.getElementById('dash-subs-warning');
+
+  if (active.length && amtEl) {
+    // Total mensual por moneda
+    const byC = {};
+    active.forEach(s => {
+      const c = s.currency || 'MXN';
+      byC[c] = (byC[c] || 0) + subsMonthlyEquiv(s.amount, s.freq);
+    });
+    amtEl.innerHTML = Object.entries(byC)
+      .map(([c,v]) => `<span style="display:block;">${fmt(v,c)}<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);font-weight:400;">/mes</span></span>`)
+      .join('');
+  } else if (amtEl) {
+    amtEl.innerHTML = '<span style="font-size:13px;color:var(--muted);">Sin suscripciones</span>';
+  }
+
+  // Próximos cobros ≤3 días
+  if (warnEl) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const soon  = active
+      .filter(s => s.nextCharge)
+      .map(s => ({ s, d: Math.round((new Date(s.nextCharge+'T12:00:00') - today) / 864e5) }))
+      .filter(x => x.d >= 0 && x.d <= 3)
+      .sort((a,b) => a.d - b.d);
+    if (soon.length) {
+      warnEl.style.display = 'block';
+      warnEl.textContent   = '⚠ ' + soon.map(x =>
+        `${x.s.icon||'🔔'} ${x.s.name} ${x.d===0?'hoy':'en '+x.d+'d'}`).join('  ·  ');
+    } else {
+      warnEl.style.display = 'none';
+    }
+  }
+
+  // ── Presupuesto: solo porcentaje ────────
+  const budgets = data.budgets || [];
+  const pctEl   = document.getElementById('dash-budget-pct');
+  const barEl   = document.getElementById('dash-budget-bar');
+
+  if (!budgets.length) {
+    if (pctEl) { pctEl.textContent = '—'; pctEl.style.color = 'var(--muted)'; }
+    if (barEl) barEl.style.width = '0%';
+    return;
+  }
+
+  const cs = {};
+  expTxs.forEach(t => {
+    const c = getTxDisplayCurrency(t, data);
+    const a = getTxDisplayAmount(t);
+    if (!cs[t.category]) cs[t.category] = {};
+    cs[t.category][c] = (cs[t.category][c] || 0) + a;
+  });
+
+  let totalLimit = 0, totalSpent = 0;
+  budgets.forEach(b => {
+    const curr  = b.currency || 'MXN';
+    const spent = (cs[b.category] || {})[curr] || 0;
+    totalLimit += b.limit;
+    totalSpent += spent;
+  });
+
+  const pct       = totalLimit > 0 ? Math.round((totalSpent / totalLimit) * 100) : 0;
+  const barColor  = pct >= 90 ? 'var(--red)' : pct >= 70 ? 'var(--gold)' : 'var(--green)';
+
+  if (pctEl) { pctEl.textContent = pct + '%'; pctEl.style.color = barColor; }
+  if (barEl) { barEl.style.width = Math.min(pct,100) + '%'; barEl.style.background = barColor; }
+}
+
+
 // ════════════════════════════════════════
 (function(){
   // Aplicar tema guardado
