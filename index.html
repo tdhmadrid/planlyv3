@@ -14,7 +14,7 @@ const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 <title>Flujo — Finanzas Personales</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#0f0e0d;--paper:#f5f0e8;--cream:#ede8dc;--gold:#c9a84c;--gold-light:#e8d49a;--red:#c0392b;--green:#2d7a4f;--blue:#2c5f8a;--purple:#6c3483;--muted:#8a8278;--border:#d4cfc5;--card:#faf7f2;}
+:root{--ink:#0f0e0d;--paper:#f5f0e8;--cream:#ede8dc;--gold:#c9a84c;--gold-light:#e8d49a;--red:#c0392b;--green:#2d7a4f;--blue:#2c5f8a;--purple:#6c3483;--muted:#8a8278;--border:#d4cfc5;--card:#faf7f2;--font-text:'DM Sans',sans-serif;--font-num:'DM Mono',monospace;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.4;}
@@ -319,6 +319,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 /* ── Mobile (≤ 600px) ── */
 @media(max-width:600px){
+  #dark-toggle-btn{display:flex!important;}
   .stats-grid{grid-template-columns:1fr;gap:8px;}
   .topbar-right .btn-primary span{display:none;}
   .stat-amount{font-size:20px;}
@@ -465,6 +466,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .cc-reminder-banner{position:sticky;top:0;z-index:200;animation:slideDown .3s ease;}
 @keyframes slideDown{from{transform:translateY(-100%);opacity:0;}to{transform:translateY(0);opacity:1;}}
 </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link id="gfonts-extra" rel="stylesheet" href="">
 </head>
 <body>
 
@@ -595,6 +599,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="topbar">
     <div class="page-title" id="page-title">Resumen <em>del mes</em></div>
     <div class="topbar-right">
+      <button id="dark-toggle-btn" onclick="toggleDarkLight()" title="Modo oscuro/claro" style="padding:7px 10px;font-size:15px;display:none;">☀️</button>
       <button class="btn-outline" onclick="openThemePicker()" title="Cambiar tema" style="padding:7px 10px;font-size:15px;">🎨</button>
       <button class="btn-outline" onclick="openTransferModal()">⇌ Traspaso</button>
       <button class="btn-outline" onclick="openTxModal('income')">↑ Ingreso</button>
@@ -2087,6 +2092,40 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
         <button class="btn-cancel" onclick="resetCustomEditor()">Resetear</button>
         <button class="btn-save" onclick="saveCustomTheme()">Guardar tema</button>
+      </div>
+    </div>
+
+    <!-- Fuentes -->
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Tipografía</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">Textos</label>
+          <select id="font-text-sel" class="form-select" style="font-size:12px;padding:6px 10px;" onchange="applyFontChoice()">
+            <option value="DM Sans">DM Sans (default)</option>
+            <option value="Inter">Inter</option>
+            <option value="Lato">Lato</option>
+            <option value="Nunito">Nunito</option>
+            <option value="Roboto">Roboto</option>
+            <option value="Open Sans">Open Sans</option>
+            <option value="Merriweather">Merriweather</option>
+            <option value="Playfair Display">Playfair Display</option>
+          </select>
+          <div id="font-text-preview" style="margin-top:6px;font-size:13px;color:var(--ink);padding:5px 8px;background:var(--cream);border-radius:6px;">El dinero trabaja para ti</div>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">Números</label>
+          <select id="font-num-sel" class="form-select" style="font-size:12px;padding:6px 10px;" onchange="applyFontChoice()">
+            <option value="DM Mono">DM Mono (default)</option>
+            <option value="JetBrains Mono">JetBrains Mono</option>
+            <option value="Fira Code">Fira Code</option>
+            <option value="IBM Plex Mono">IBM Plex Mono</option>
+            <option value="Roboto Mono">Roboto Mono</option>
+            <option value="Space Mono">Space Mono</option>
+            <option value="Courier Prime">Courier Prime</option>
+          </select>
+          <div id="font-num-preview" style="margin-top:6px;font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);padding:5px 8px;background:var(--cream);border-radius:6px;">MX$12,345.67</div>
+        </div>
       </div>
     </div>
 
@@ -4798,6 +4837,7 @@ function applyTheme(name,silent=false){
   document.querySelectorAll('.theme-card').forEach(el=>el.classList.remove('active'));
   const el=document.getElementById('tc-'+name);if(el)el.classList.add('active');
   if(!silent)flujoToast('✓ Tema "'+t._name+'" aplicado');
+  _updateDarkToggleBtn();
 }
 function openThemePicker(){
   switchThemeTab('presets');
@@ -7513,6 +7553,112 @@ function renderDashSummary(data, expTxs) {
 
 
 // ════════════════════════════════════════
+// DARK / LIGHT TOGGLE (mobile quick switch)
+// ════════════════════════════════════════
+const _DARK_THEME  = 'midnight';
+const _LIGHT_THEME = 'classic';
+
+function toggleDarkLight() {
+  const isDark = currentTheme === _DARK_THEME ||
+    THEMES[currentTheme]?.paper < '#888888';  // heuristic: dark paper
+  const next = isDark ? _LIGHT_THEME : _DARK_THEME;
+  applyTheme(next);
+  rebuildThemeGrid();
+  _updateDarkToggleBtn();
+}
+
+function _updateDarkToggleBtn() {
+  const btn = document.getElementById('dark-toggle-btn');
+  if (!btn) return;
+  const isDark = currentTheme === _DARK_THEME ||
+    (THEMES[currentTheme] && THEMES[currentTheme].paper < '#888888');
+  btn.textContent = isDark ? '☀️' : '🌙';
+  btn.title = isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+}
+
+// ════════════════════════════════════════
+// FONT CUSTOMIZATION
+// ════════════════════════════════════════
+const _FONT_STORAGE_KEY = 'flujo_fonts';
+
+// Map font names to Google Fonts API names
+const _GFONT_MAP = {
+  'Inter':            'Inter',
+  'Lato':             'Lato:wght@400;600;700',
+  'Nunito':           'Nunito:wght@400;600;700',
+  'Roboto':           'Roboto:wght@400;500;700',
+  'Open Sans':        'Open+Sans:wght@400;600;700',
+  'Merriweather':     'Merriweather:wght@400;700',
+  'Playfair Display': 'Playfair+Display:wght@400;700',
+  'JetBrains Mono':   'JetBrains+Mono:wght@400;500',
+  'Fira Code':        'Fira+Code:wght@400;500',
+  'IBM Plex Mono':    'IBM+Plex+Mono:wght@400;500',
+  'Roboto Mono':      'Roboto+Mono:wght@400;500',
+  'Space Mono':       'Space+Mono',
+  'Courier Prime':    'Courier+Prime:wght@400;700',
+};
+
+function _loadGoogleFont(fontName) {
+  if (!_GFONT_MAP[fontName]) return;
+  const id = 'gfont-' + fontName.replace(/\s+/g,'-');
+  if (document.getElementById(id)) return; // already loaded
+  const link = document.createElement('link');
+  link.id   = id;
+  link.rel  = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${_GFONT_MAP[fontName]}&display=swap`;
+  document.head.appendChild(link);
+}
+
+function applyFontChoice() {
+  const textFont = document.getElementById('font-text-sel')?.value || 'DM Sans';
+  const numFont  = document.getElementById('font-num-sel')?.value  || 'DM Mono';
+
+  // Load from Google Fonts if needed
+  _loadGoogleFont(textFont);
+  _loadGoogleFont(numFont);
+
+  // Apply to CSS variables / body
+  document.body.style.fontFamily = `'${textFont}', sans-serif`;
+  document.documentElement.style.setProperty('--font-text', `'${textFont}', sans-serif`);
+  document.documentElement.style.setProperty('--font-num',  `'${numFont}', monospace`);
+
+  // Patch all monospace elements live
+  document.querySelectorAll(
+    '.tx-date, .tx-amount, .tx-meta, .stat-amount, .stat-sub, ' +
+    '[style*="DM Mono"], .cc-stat-val, .cc-stat-label, ' +
+    'input[style*="monospace"]'
+  ).forEach(el => {
+    if (el.style.fontFamily && el.style.fontFamily.includes('Mono')) {
+      el.style.fontFamily = `'${numFont}', monospace`;
+    }
+  });
+
+  // Update previews
+  const textPrev = document.getElementById('font-text-preview');
+  const numPrev  = document.getElementById('font-num-preview');
+  if (textPrev) textPrev.style.fontFamily = `'${textFont}', sans-serif`;
+  if (numPrev)  numPrev.style.fontFamily  = `'${numFont}', monospace`;
+
+  // Persist
+  try {
+    localStorage.setItem(_FONT_STORAGE_KEY, JSON.stringify({text: textFont, num: numFont}));
+  } catch(e) {}
+}
+
+function _initFonts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(_FONT_STORAGE_KEY) || 'null');
+    if (!saved) return;
+    const textSel = document.getElementById('font-text-sel');
+    const numSel  = document.getElementById('font-num-sel');
+    if (textSel && saved.text) textSel.value = saved.text;
+    if (numSel  && saved.num)  numSel.value  = saved.num;
+    applyFontChoice();
+  } catch(e) {}
+}
+
+
+// ════════════════════════════════════════
 (function(){
   // Aplicar tema guardado
   loadCustomThemesFromStorage();
@@ -7528,6 +7674,8 @@ function renderDashSummary(data, expTxs) {
   }
   updateMonthLabel();
   setTxType('expense');
+  _initFonts();
+  _updateDarkToggleBtn();
 
   // Mostrar pantalla de login hasta verificar sesión
   document.getElementById('auth-screen').style.display='flex';
