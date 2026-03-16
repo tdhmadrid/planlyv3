@@ -2823,11 +2823,18 @@ function renderIncomeView(txs,data){
   // Capture byCurr for Pie FX panel
   const incAllByCurr={};
   f.forEach(t=>{const c=getTxDisplayCurrency(t,data);incAllByCurr[c]=(incAllByCurr[c]||0)+getTxDisplayAmount(t);});
-  pieByCurr.income=incAllByCurr;
+  pieByCurr.income  = incAllByCurr;
+  pieCatCurr.income = bySourceCurr;
+  const isMultiCurrInc = Object.keys(incAllByCurr).length > 1;
+  const fxPanelInc = document.getElementById('income-pie-fx');
+  if (fxPanelInc && isMultiCurrInc) fxPanelInc.style.display = 'block';
   requestAnimationFrame(()=>{
-    drawPie('income-pie-canvas',slices);
-    buildPieLegend('income-pie-legend',slices,total,priCurr);
-    if(document.getElementById('income-pie-fx')?.style.display!=='none')renderPieFxResult('income');
+    if (isMultiCurrInc) {
+      renderPieFxResult('income');
+    } else {
+      drawPie('income-pie-canvas', slices);
+      buildPieLegend('income-pie-legend', slices, total, priCurr);
+    }
   });
 }
 
@@ -2887,12 +2894,21 @@ function renderExpenseView(txs,data){
     label, value, color:PIE_PALETTE[i%PIE_PALETTE.length],
     byCurr: byCatCurr[label]  // carry per-currency amounts for the legend
   }));
-  // Capture byCurr for Pie FX panel
-  pieByCurr.expense=byCurr;
+  // Store for FX conversion panel
+  pieByCurr.expense  = byCurr;
+  pieCatCurr.expense = byCatCurr;
+  const isMultiCurr = Object.keys(byCurr).length > 1;
+  const fxPanel = document.getElementById('expense-pie-fx');
+  if (fxPanel && isMultiCurr) fxPanel.style.display = 'block';
   requestAnimationFrame(()=>{
-    drawPie('expense-pie-canvas',expSlices);
-    buildPieLegend('expense-pie-legend',expSlices,totalForPie,priCurr);
-    if(document.getElementById('expense-pie-fx')?.style.display!=='none')renderPieFxResult('expense');
+    if (isMultiCurr) {
+      // With multi-currency: render panel (which redraws pie+legend converted)
+      renderPieFxResult('expense');
+    } else {
+      // Single currency: draw pie+legend directly
+      drawPie('expense-pie-canvas', expSlices);
+      buildPieLegend('expense-pie-legend', expSlices, totalForPie, priCurr);
+    }
   });
 }
 
@@ -5317,9 +5333,9 @@ function deleteInvestment(id){
 // ════════════════════════════════════════
 // PIE FX CONVERTER
 // ════════════════════════════════════════
-let pieFxRates={income:{},expense:{}};
-// Store byCurr for each view, updated when rendering pies
-let pieByCurr={income:{},expense:{}};
+let pieFxRates={income:{},expense:{}};  // {EUR→MXN: 21.5} — persisten en sesión
+let pieByCurr={income:{},expense:{}};   // {MXN: total, EUR: total}
+let pieCatCurr={income:{},expense:{}};  // {cat: {MXN: amt, EUR: amt}}
 
 function togglePieFx(view){
   const panel=document.getElementById(view+'-pie-fx');
@@ -5331,48 +5347,107 @@ function togglePieFx(view){
   if(show)renderPieFxResult(view);
 }
 
-function renderPieFxResult(view){
-  const target=document.getElementById(view+'-fx-target')?.value||'MXN';
-  const byCurr=pieByCurr[view]||{};
-  const ratesEl=document.getElementById(view+'-pie-fx-rates');
-  const totalEl=document.getElementById(view+'-pie-fx-total');
-  if(!ratesEl||!totalEl)return;
 
-  const currencies=Object.keys(byCurr);
-  if(!currencies.length){ratesEl.innerHTML='<p style="font-size:11px;color:var(--muted);">Sin datos</p>';return;}
+function _convertToTarget(byCurr, target, rates) {
+  let total = 0, allOk = true;
+  const detail = Object.entries(byCurr).map(([c, amount]) => {
+    if (c === target) { total += amount; return {c, amount, conv:amount, ok:true}; }
+    const rate = rates[c+'→'+target] || (rates[target+'→'+c] ? 1/rates[target+'→'+c] : 0);
+    if (rate) { const conv = amount*rate; total += conv; return {c, amount, conv, ok:true}; }
+    allOk = false;
+    return {c, amount, conv:0, ok:false};
+  });
+  return {total, allOk, detail};
+}
 
-  let total=0,allOk=true;
-  ratesEl.innerHTML=currencies.map(c=>{
-    const amount=byCurr[c]||0;
-    let conv,ok=true;
-    if(c===target){conv=amount;}
-    else{
-      const rate=pieFxRates[view][c+'→'+target]||0;
-      if(rate){conv=amount*rate;}
-      else{ok=false;allOk=false;conv=0;}
-    }
-    if(ok)total+=conv;
-    const isInput=c!==target;
-    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);">
-      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink);flex-shrink:0;">${fmt(amount,c)}</span>
+function renderPieFxResult(view) {
+  const target  = document.getElementById(view+'-fx-target')?.value || 'MXN';
+  const byCurr  = pieByCurr[view]  || {};
+  const catCurr = pieCatCurr[view] || {};
+  const rates   = pieFxRates[view] || {};
+  const ratesEl = document.getElementById(view+'-pie-fx-rates');
+  const totalEl = document.getElementById(view+'-pie-fx-total');
+  if (!ratesEl || !totalEl) return;
+
+  const currencies = Object.keys(byCurr);
+  if (!currencies.length) {
+    ratesEl.innerHTML = '<p style="font-size:11px;color:var(--muted);">Sin datos</p>';
+    return;
+  }
+
+  // ── TC input rows (only foreign currencies) ───────────
+  const foreignCurrs = currencies.filter(c => c !== target);
+  ratesEl.innerHTML = foreignCurrs.length ? foreignCurrs.map(c => {
+    const rate = rates[c+'→'+target] || (rates[target+'→'+c] ? 1/rates[target+'→'+c] : 0);
+    const conv = rate ? byCurr[c] * rate : 0;
+    const ok   = !!rate;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink);flex-shrink:0;">${fmt(byCurr[c],c)}</span>
       <span style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
-        ${isInput?`<input type="number" step="any" placeholder="TC" title="1 ${c} → ${target}"
-          style="width:60px;padding:3px 5px;font-size:10px;background:var(--paper);border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;text-align:center;"
-          value="${pieFxRates[view][c+'→'+target]||''}"
-          oninput="pieFxRates['${view}']['${c}→${target}']=parseFloat(this.value)||0;renderPieFxResult('${view}')" />`:''}
-        <span style="font-family:'DM Mono',monospace;font-size:11px;font-weight:600;color:${ok?'var(--ink)':'var(--muted)'};min-width:72px;text-align:right;">
-          ${ok?fmt(conv,target):'— TC'}
+        <span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">1 ${c} =</span>
+        <input type="number" step="any" placeholder="TC"
+          style="width:64px;padding:3px 5px;font-size:11px;background:var(--paper);border:1px solid ${ok?'var(--border)':'rgba(192,57,43,0.4)'};border-radius:5px;font-family:'DM Mono',monospace;text-align:center;"
+          value="${rate ? rate.toFixed(4) : ''}"
+          oninput="pieFxRates['${view}']['${c}→${target}']=parseFloat(this.value)||0;renderPieFxResult('${view}');"/>
+        <span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">${target}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:${ok?'var(--ink)':'var(--red)'};min-width:80px;text-align:right;">
+          ${ok ? fmt(conv,target) : '⚠ falta TC'}
         </span>
       </span>
     </div>`;
-  }).join('');
+  }).join('') : `<p style="font-size:11px;color:var(--muted);">Todo en ${target} — sin conversión necesaria</p>`;
 
-  const color=view==='income'?'var(--green)':'var(--red)';
-  const prefix=view==='income'?'+':'−';
-  totalEl.innerHTML=`<div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px;">TOTAL ${target}</div>
-    <span style="color:${color};">${allOk?'':' ≈ '}${prefix}${fmt(total,target)}</span>
-    ${!allOk?'<div style="font-size:9px;color:var(--muted);margin-top:3px;">* Ingresa los tipos de cambio faltantes o usa ↻ Auto</div>':''}`;
+  // ── Recompute ALL category slices in target currency ──
+  const catTotals = {};
+  let allConverted = true;
+  Object.entries(catCurr).forEach(([cat, cMap]) => {
+    const {total, allOk} = _convertToTarget(cMap, target, rates);
+    catTotals[cat] = {total, allOk};
+    if (!allOk) allConverted = false;
+  });
+  const grandTotal = Object.values(catTotals).reduce((s,v) => s+v.total, 0);
+
+  // ── Redraw pie + legend sorted by converted value ─────
+  const sorted = Object.entries(catTotals)
+    .filter(([,v]) => v.total > 0)
+    .sort((a,b) => b[1].total - a[1].total);
+
+  const newSlices = sorted.map(([label,{total}],i) => ({
+    label, value:total, color:PIE_PALETTE[i%PIE_PALETTE.length]
+  }));
+
+  const legendEl = document.getElementById(view+'-pie-legend');
+  requestAnimationFrame(() => {
+    drawPie(view+'-pie-canvas', newSlices);
+    if (legendEl) {
+      legendEl.innerHTML = newSlices.map((sl,i) => {
+        const pct = grandTotal > 0 ? Math.round((sl.value/grandTotal)*100) : 0;
+        const origCurrs = catCurr[sl.label] || {};
+        const origStr = Object.entries(origCurrs)
+          .filter(([c]) => c !== target)
+          .map(([c,v]) => fmt(v,c)).join(' + ');
+        return `<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--cream);">
+          <div style="width:10px;height:10px;border-radius:50%;background:${sl.color};flex-shrink:0;"></div>
+          <div style="flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${sl.label}">${sl.label}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);flex-shrink:0;">${pct}%</div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;font-weight:600;">${fmt(sl.value,target)}</div>
+            ${origStr ? `<div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);">${origStr}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+  });
+
+  // ── Grand total ───────────────────────────────────────
+  const color  = view==='income' ? 'var(--green)' : 'var(--red)';
+  const prefix = view==='income' ? '+' : '−';
+  totalEl.innerHTML = `
+    <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px;">TOTAL ${target}${!allConverted?' (parcial)':''}</div>
+    <span style="color:${color};">${!allConverted?'≈ ':''}${prefix}${fmt(grandTotal,target)}</span>
+    ${!allConverted ? '<div style="font-size:9px;color:var(--red);margin-top:4px;">⚠ Faltan tipos de cambio — ingrésalos arriba</div>' : ''}`;
 }
+
 
 async function fetchPieFxRates(view){
   const target=document.getElementById(view+'-fx-target')?.value||'MXN';
