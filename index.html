@@ -257,10 +257,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .cc-limit-bar-fill{height:5px;border-radius:99px;background:linear-gradient(90deg,var(--gold),#e8d49a);transition:width 0.4s;}
 .cc-limit-bar-fill.danger{background:linear-gradient(90deg,var(--red),#e74c3c);}
 .cc-limit-bar-fill.warning{background:linear-gradient(90deg,#e67e22,#f39c12);}
-.cc-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px;}
-.cc-stat{background:rgba(255,255,255,0.06);border-radius:8px;padding:8px 12px;min-width:0;overflow:visible;}
+.cc-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-top:10px;}
+.cc-stat{background:rgba(255,255,255,0.06);border-radius:8px;padding:8px 10px;min-width:0;overflow:hidden;}
 .cc-stat-label{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cc-stat-val{font-family:'DM Mono',monospace;font-size:clamp(11px,1.6vw,15px);font-weight:700;white-space:nowrap;line-height:1.25;overflow:visible;}
+.cc-stat-val{font-family:'DM Mono',monospace;font-size:clamp(9px,1.2vw,13px);font-weight:700;white-space:nowrap;line-height:1.25;overflow:hidden;text-overflow:ellipsis;}
 .cc-stat-val.available{color:var(--gold);}
 .cc-stat-val.used{color:#ff8a8a;}
 .cc-stat-val.limit{color:rgba(255,255,255,0.7);}
@@ -5360,44 +5360,14 @@ function _convertToTarget(byCurr, target, rates) {
   return {total, allOk, detail};
 }
 
-function renderPieFxResult(view) {
+// Only redraws pie + legend + total — does NOT rebuild TC inputs (prevents focus loss)
+function _updatePieFromRates(view) {
   const target  = document.getElementById(view+'-fx-target')?.value || 'MXN';
-  const byCurr  = pieByCurr[view]  || {};
   const catCurr = pieCatCurr[view] || {};
   const rates   = pieFxRates[view] || {};
-  const ratesEl = document.getElementById(view+'-pie-fx-rates');
   const totalEl = document.getElementById(view+'-pie-fx-total');
-  if (!ratesEl || !totalEl) return;
 
-  const currencies = Object.keys(byCurr);
-  if (!currencies.length) {
-    ratesEl.innerHTML = '<p style="font-size:11px;color:var(--muted);">Sin datos</p>';
-    return;
-  }
-
-  // ── TC input rows (only foreign currencies) ───────────
-  const foreignCurrs = currencies.filter(c => c !== target);
-  ratesEl.innerHTML = foreignCurrs.length ? foreignCurrs.map(c => {
-    const rate = rates[c+'→'+target] || (rates[target+'→'+c] ? 1/rates[target+'→'+c] : 0);
-    const conv = rate ? byCurr[c] * rate : 0;
-    const ok   = !!rate;
-    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);">
-      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink);flex-shrink:0;">${fmt(byCurr[c],c)}</span>
-      <span style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
-        <span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">1 ${c} =</span>
-        <input type="number" step="any" placeholder="TC"
-          style="width:64px;padding:3px 5px;font-size:11px;background:var(--paper);border:1px solid ${ok?'var(--border)':'rgba(192,57,43,0.4)'};border-radius:5px;font-family:'DM Mono',monospace;text-align:center;"
-          value="${rate ? rate.toFixed(4) : ''}"
-          oninput="pieFxRates['${view}']['${c}→${target}']=parseFloat(this.value)||0;renderPieFxResult('${view}');"/>
-        <span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">${target}</span>
-        <span style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:${ok?'var(--ink)':'var(--red)'};min-width:80px;text-align:right;">
-          ${ok ? fmt(conv,target) : '⚠ falta TC'}
-        </span>
-      </span>
-    </div>`;
-  }).join('') : `<p style="font-size:11px;color:var(--muted);">Todo en ${target} — sin conversión necesaria</p>`;
-
-  // ── Recompute ALL category slices in target currency ──
+  // Recompute category totals in target currency
   const catTotals = {};
   let allConverted = true;
   Object.entries(catCurr).forEach(([cat, cMap]) => {
@@ -5407,7 +5377,7 @@ function renderPieFxResult(view) {
   });
   const grandTotal = Object.values(catTotals).reduce((s,v) => s+v.total, 0);
 
-  // ── Redraw pie + legend sorted by converted value ─────
+  // Sort by converted value (correct ordering)
   const sorted = Object.entries(catTotals)
     .filter(([,v]) => v.total > 0)
     .sort((a,b) => b[1].total - a[1].total);
@@ -5416,9 +5386,25 @@ function renderPieFxResult(view) {
     label, value:total, color:PIE_PALETTE[i%PIE_PALETTE.length]
   }));
 
-  const legendEl = document.getElementById(view+'-pie-legend');
+  // Update tc-result spans (without rebuilding inputs)
+  const ratesEl = document.getElementById(view+'-pie-fx-rates');
+  if (ratesEl) {
+    const byCurr = pieByCurr[view] || {};
+    ratesEl.querySelectorAll('[data-fx-result]').forEach(span => {
+      const c    = span.dataset.fxResult;
+      const rate = rates[c+'→'+target] || (rates[target+'→'+c] ? 1/rates[target+'→'+c] : 0);
+      const conv = rate ? (byCurr[c]||0) * rate : 0;
+      const ok   = !!rate;
+      span.textContent = ok ? fmt(conv, target) : '⚠ falta TC';
+      span.style.color = ok ? 'var(--ink)' : 'var(--red)';
+      span.closest('[data-fx-row]').querySelector('input').style.borderColor =
+        ok ? 'var(--border)' : 'rgba(192,57,43,0.4)';
+    });
+  }
+
   requestAnimationFrame(() => {
     drawPie(view+'-pie-canvas', newSlices);
+    const legendEl = document.getElementById(view+'-pie-legend');
     if (legendEl) {
       legendEl.innerHTML = newSlices.map((sl,i) => {
         const pct = grandTotal > 0 ? Math.round((sl.value/grandTotal)*100) : 0;
@@ -5439,13 +5425,54 @@ function renderPieFxResult(view) {
     }
   });
 
-  // ── Grand total ───────────────────────────────────────
-  const color  = view==='income' ? 'var(--green)' : 'var(--red)';
-  const prefix = view==='income' ? '+' : '−';
-  totalEl.innerHTML = `
-    <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px;">TOTAL ${target}${!allConverted?' (parcial)':''}</div>
-    <span style="color:${color};">${!allConverted?'≈ ':''}${prefix}${fmt(grandTotal,target)}</span>
-    ${!allConverted ? '<div style="font-size:9px;color:var(--red);margin-top:4px;">⚠ Faltan tipos de cambio — ingrésalos arriba</div>' : ''}`;
+  if (totalEl) {
+    const color  = view==='income' ? 'var(--green)' : 'var(--red)';
+    const prefix = view==='income' ? '+' : '−';
+    totalEl.innerHTML = `
+      <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-bottom:3px;">TOTAL ${target}${!allConverted?' (parcial)':''}</div>
+      <span style="color:${color};">${!allConverted?'≈ ':''}${prefix}${fmt(grandTotal,target)}</span>
+      ${!allConverted ? '<div style="font-size:9px;color:var(--red);margin-top:4px;">⚠ Faltan tipos de cambio — ingrésalos arriba</div>' : ''}`;
+  }
+}
+
+// Full rebuild of TC inputs + pie + legend (called on mount and currency target change)
+function renderPieFxResult(view) {
+  const target  = document.getElementById(view+'-fx-target')?.value || 'MXN';
+  const byCurr  = pieByCurr[view]  || {};
+  const rates   = pieFxRates[view] || {};
+  const ratesEl = document.getElementById(view+'-pie-fx-rates');
+  if (!ratesEl) return;
+
+  const currencies = Object.keys(byCurr);
+  if (!currencies.length) {
+    ratesEl.innerHTML = '<p style="font-size:11px;color:var(--muted);">Sin datos</p>';
+    return;
+  }
+
+  // Build TC input rows — each has data-fx-row and data-fx-result attributes
+  const foreignCurrs = currencies.filter(c => c !== target);
+  ratesEl.innerHTML = foreignCurrs.length ? foreignCurrs.map(c => {
+    const rate = rates[c+'→'+target] || (rates[target+'→'+c] ? 1/rates[target+'→'+c] : 0);
+    const conv = rate ? byCurr[c] * rate : 0;
+    const ok   = !!rate;
+    return `<div data-fx-row="${c}" style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:7px 0;border-bottom:1px solid var(--border);">
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink);flex-shrink:0;">${fmt(byCurr[c],c)}</span>
+      <span style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+        <span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;">1 ${c} =</span>
+        <input type="number" step="any" placeholder="TC"
+          style="width:72px;padding:4px 6px;font-size:12px;background:var(--paper);border:1px solid ${ok?'var(--border)':'rgba(192,57,43,0.4)'};border-radius:6px;font-family:'DM Mono',monospace;text-align:center;"
+          value="${rate ? rate.toFixed(4) : ''}"
+          oninput="pieFxRates['${view}']['${c}→${target}']=parseFloat(this.value)||0;_updatePieFromRates('${view}');"/>
+        <span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;">${target}</span>
+        <span data-fx-result="${c}" style="font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:${ok?'var(--ink)':'var(--red)'};min-width:80px;text-align:right;white-space:nowrap;">
+          ${ok ? fmt(conv,target) : '⚠ falta TC'}
+        </span>
+      </span>
+    </div>`;
+  }).join('') : `<p style="font-size:11px;color:var(--muted);padding:4px 0;">Todo en ${target}</p>`;
+
+  // Initial draw
+  _updatePieFromRates(view);
 }
 
 
