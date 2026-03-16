@@ -2720,13 +2720,29 @@ function renderPatrimony(data){
     const ic=CRYPTO_CODES.has(curr),debt=debtC[curr]||0,net=total-debt,count=countC[curr]||0;
     return `<div class="currency-pill ${ic?'crypto-pill':'fiat-pill'}">${ic?`<span style="font-size:16px;opacity:0.7">${curr==='BTC'?'₿':curr==='ETH'?'Ξ':'🪙'}</span>`:''}<div><div class="currency-code">${curr}</div><div class="currency-amount">${fmt(total,curr)}</div>${debt?`<div class="currency-sub" style="color:var(--red)">T.Crédito: −${fmt(debt,curr)}</div><div class="currency-sub" style="color:var(--green)">Neto: ${fmt(net,curr)}</div>`:''}<div class="currency-sub">${count} cuenta${count!==1?'s':''}</div></div></div>`;
   }).join('');
-  // Show credit card summary if any
-  const creditEntries=Object.entries(creditLimitC);
-  if(creditEntries.length){
+  // Show each credit card individually (never group across currencies)
+  const creditCards=data.accounts.filter(a=>a.type==='credit');
+  if(creditCards.length){
     el.innerHTML+=`<div style="width:100%;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);">
       <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;margin-bottom:6px;">💳 CRÉDITO DISPONIBLE</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        ${creditEntries.map(([c,lim])=>{const used=creditUsedC[c]||0;const avail=lim-used;return `<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:8px;padding:6px 10px;"><div style="font-size:8px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;">${c} Disponible</div><div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);font-weight:600;">${fmt(avail,c)}</div>${used?`<div style="font-size:9px;color:var(--red);">Usado: ${fmt(used,c)}</div>`:''}</div>`;}).join('')}
+        ${creditCards.map(cc=>{
+          const c=cc.currency||'MXN';
+          const lim=cc.creditLimit||0;
+          const avail=cc.balance||0;
+          const used=Math.max(0,lim-avail);
+          const usedPct=lim>0?Math.round((used/lim)*100):0;
+          const barColor=usedPct>=90?'var(--red)':usedPct>=70?'var(--gold)':'var(--green)';
+          return `<div style="background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:8px 12px;min-width:130px;">
+            <div style="font-size:10px;font-weight:600;margin-bottom:4px;">${cc.icon||'💳'} ${cc.name}</div>
+            <div style="font-size:8px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">${c} · Disponible</div>
+            <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--gold);font-weight:700;">${fmt(avail,c)}</div>
+            <div style="margin-top:5px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;"><div style="width:${usedPct}%;height:100%;background:${barColor};border-radius:2px;"></div></div>
+            <div style="display:flex;justify-content:space-between;margin-top:2px;font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">
+              <span>Usado ${usedPct}%</span><span>Límite ${fmt(lim,c)}</span>
+            </div>
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
   }
@@ -3774,7 +3790,13 @@ function renderIncomeSources(data){
   if(!data.incomeSources.length){el.innerHTML='<div class="empty"><div class="empty-icon">🤝</div><p>Sin fuentes registradas</p></div>';return;}
   el.innerHTML=data.incomeSources.map(src=>{
     const txs=data.transactions.filter(t=>t.type==='income'&&t.sourceId===src.id);
-    const total=txs.reduce((s,t)=>s+t.amount,0);
+    // Group by currency - never sum across currencies
+    const byCurr={};
+    txs.forEach(t=>{
+      const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';
+      byCurr[c]=(byCurr[c]||0)+(t.amount||0);
+    });
+    const totalStr=Object.entries(byCurr).map(([c,v])=>fmt(v,c)).join(' + ')||fmt(0);
     return `<div class="source-item">
       <div class="source-avatar" style="background:${strColor(src.name)}">${src.name.charAt(0).toUpperCase()}</div>
       <div class="source-info">
@@ -3782,7 +3804,7 @@ function renderIncomeSources(data){
         <div class="source-meta">${SOURCE_TYPE_LABELS[src.type]||src.type} · ${FREQ_LABELS[src.freq]||src.freq}${src.expected?` · Esperado: ${fmt(src.expected)}`:''}</div>
         ${src.notes?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${src.notes}</div>`:''}
       </div>
-      <div style="text-align:right;"><div class="source-total">${fmt(total)}</div><div class="source-count">${txs.length} pago${txs.length!==1?'s':''}</div></div>
+      <div style="text-align:right;"><div class="source-total">${totalStr}</div><div class="source-count">${txs.length} pago${txs.length!==1?'s':''}</div></div>
       <div style="display:flex;gap:4px;margin-left:8px;"><button class="btn-sm btn-edit" onclick="editIncomeSource('${src.id}')">✎</button><button class="btn-sm btn-del" onclick="deleteIncomeSource('${src.id}')">✕</button></div>
     </div>`;
   }).join('');
@@ -5398,7 +5420,13 @@ function renderSourcePeriods(){
   if(incomeSourcesEl && data.incomeSources.length){
     incomeSourcesEl.innerHTML=data.incomeSources.map(src=>{
       const srcTxs=filtered.filter(t=>t.sourceId===src.id);
-      const total=srcTxs.reduce((s,t)=>s+t.amount,0);
+      // Group by currency - never sum across currencies
+      const srcByCurr={};
+      srcTxs.forEach(t=>{
+        const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';
+        srcByCurr[c]=(srcByCurr[c]||0)+(t.amount||0);
+      });
+      const totalStr=Object.entries(srcByCurr).map(([c,v])=>fmt(v,c)).join(' + ')||fmt(0);
       const periodLabel=yearFilter!=='all'?(monthFilter!=='all'?`${['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(monthFilter)-1]} ${yearFilter}`:yearFilter):(monthFilter!=='all'?['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][parseInt(monthFilter)-1]:'Todo el período');
       return `<div class="source-item">
         <div class="source-avatar" style="background:${strColor(src.name)}">${src.name.charAt(0).toUpperCase()}</div>
@@ -5408,7 +5436,7 @@ function renderSourcePeriods(){
           ${src.notes?`<div style="font-size:10px;color:var(--muted);margin-top:1px;">${src.notes}</div>`:''}
         </div>
         <div style="text-align:right;">
-          <div class="source-total">${fmt(total)}</div>
+          <div class="source-total">${totalStr}</div>
           <div class="source-count">${srcTxs.length} pago${srcTxs.length!==1?'s':''}</div>
           <div style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">${periodLabel}</div>
         </div>
@@ -7606,7 +7634,7 @@ function renderStatCards(incByCurr, expByCurr) {
           <input data-pair="${c}→${target}" type="number" step="any" placeholder="TC"
             style="width:64px;padding:3px 6px;font-size:11px;background:var(--cream);border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;text-align:center;"
             value="${storedRate}"
-            oninput="if(!window._statRates)window._statRates={};window._statRates['${c}→${target}']=parseFloat(this.value)||0;refreshStatCards();">
+            oninput="if(!window._statRates)window._statRates={};const v=parseFloat(this.value);if(v>0){window._statRates['${c}→${target}']=v;}else{delete window._statRates['${c}→${target}'];}refreshStatCards();">
           <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);">${target}</span>
         </span>`;
       }).join('');
