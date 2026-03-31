@@ -6065,13 +6065,26 @@ function buildReportHTML({ data, txs, rangeLabel }){
     html += `<div style="display:grid;grid-template-columns:${showIngresos&&showGastos?'1fr 1fr':'1fr'};gap:16px;margin-bottom:16px;">`;
     if(showIngresos){
       html += `<div class="report-card"><div class="report-section-title">📥 Ingresos por categoría</div>
-        ${Object.entries(incByCat).map(([cat,byCurr])=>`<div class="report-row"><span>${catEmoji(cat)} ${cat}</span><span class="report-total" style="color:var(--green);">${_fmtByCurr(byCurr,'+')}</span></div>`).join('')
+        ${Object.entries(incByCat)
+          .sort((a,b)=>Object.values(b[1]).reduce((s,v)=>s+v,0)-Object.values(a[1]).reduce((s,v)=>s+v,0))
+          .map(([cat,byCurr])=>`<div class="report-row"><span>${catEmoji(cat)} ${cat}</span><span class="report-total" style="color:var(--green);">${_fmtByCurr(byCurr,'+')}</span></div>`).join('')
           || '<div style="font-size:12px;color:var(--muted);padding:8px 0;">Sin ingresos en el período</div>'}
       </div>`;
     }
     if(showGastos){
       html += `<div class="report-card"><div class="report-section-title">📤 Gastos por categoría</div>
-        ${Object.entries(expByCat).map(([cat,byCurr])=>`<div class="report-row"><span>${catEmoji(cat)} ${cat}</span><span class="report-total" style="color:var(--red);">${_fmtByCurr(byCurr,'−')}</span></div>`).join('')
+        ${Object.entries(expByCat)
+          .sort((a,b)=>{
+            const sumA=Object.values(a[1]).reduce((s,v)=>s+v,0);
+            const sumB=Object.values(b[1]).reduce((s,v)=>s+v,0);
+            if(rptTarget){
+              const ca=_rptConvert(sumA,Object.keys(a[1])[0],rptTarget)||sumA;
+              const cb=_rptConvert(sumB,Object.keys(b[1])[0],rptTarget)||sumB;
+              return cb-ca;
+            }
+            return sumB-sumA;
+          })
+          .map(([cat,byCurr])=>`<div class="report-row"><span>${catEmoji(cat)} ${cat}</span><span class="report-total" style="color:var(--red);">${_fmtByCurr(byCurr,'−')}</span></div>`).join('')
           || '<div style="font-size:12px;color:var(--muted);padding:8px 0;">Sin gastos en el período</div>'}
       </div>`;
     }
