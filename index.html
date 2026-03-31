@@ -5967,8 +5967,8 @@ function buildReportHTML({ data, txs, rangeLabel }){
 
   // Raw by-currency totals
   const incByCurr={}, expByCurr={};
-  incTxs.forEach(t=>{const c=getTxDisplayCurrency(t,data);incByCurr[c]=(incByCurr[c]||0)+getTxDisplayAmount(t);});
-  expTxs.forEach(t=>{const c=getTxDisplayCurrency(t,data);expByCurr[c]=(expByCurr[c]||0)+getTxDisplayAmount(t);});
+  incTxs.forEach(t=>{const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';incByCurr[c]=(incByCurr[c]||0)+(t.amount||0);});
+  expTxs.forEach(t=>{const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';expByCurr[c]=(expByCurr[c]||0)+(t.amount||0);});
 
   // Consolidate per-currency map to target currency
   const _consolidate = (byC) => {
@@ -5999,15 +5999,16 @@ function buildReportHTML({ data, txs, rangeLabel }){
   // Per-category breakdowns — convert each amount when target is set
   const expByCat={};
   expTxs.forEach(t=>{
-    const c=getTxDisplayCurrency(t,data);
-    const a=getTxDisplayAmount(t);
+    // Use account currency + t.amount (same as pie) for consistency
+    const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';
+    const a=t.amount||0;
     if(!expByCat[t.category])expByCat[t.category]={};
     expByCat[t.category][c]=(expByCat[t.category][c]||0)+a;
   });
   const incByCat={};
   incTxs.forEach(t=>{
-    const c=getTxDisplayCurrency(t,data);
-    const a=getTxDisplayAmount(t);
+    const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';
+    const a=t.amount||0;
     if(!incByCat[t.category])incByCat[t.category]={};
     incByCat[t.category][c]=(incByCat[t.category][c]||0)+a;
   });
