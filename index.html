@@ -6075,14 +6075,14 @@ function buildReportHTML({ data, txs, rangeLabel }){
       html += `<div class="report-card"><div class="report-section-title">📤 Gastos por categoría</div>
         ${Object.entries(expByCat)
           .sort((a,b)=>{
-            const sumA=Object.values(a[1]).reduce((s,v)=>s+v,0);
-            const sumB=Object.values(b[1]).reduce((s,v)=>s+v,0);
-            if(rptTarget){
-              const ca=_rptConvert(sumA,Object.keys(a[1])[0],rptTarget)||sumA;
-              const cb=_rptConvert(sumB,Object.keys(b[1])[0],rptTarget)||sumB;
-              return cb-ca;
-            }
-            return sumB-sumA;
+            // Convert each currency to target (or priCurr) for correct cross-currency ordering
+            const _catTotal=(byCurr)=>Object.entries(byCurr).reduce((s,[c,v])=>{
+              const tgt=rptTarget||priCurr;
+              if(c===tgt)return s+v;
+              const r=_rptConvert(1,c,tgt);
+              return s+(r?v*r:v);  // fallback: use raw value if no TC (same-currency comparison)
+            },0);
+            return _catTotal(b[1])-_catTotal(a[1]);
           })
           .map(([cat,byCurr])=>`<div class="report-row"><span>${catEmoji(cat)} ${cat}</span><span class="report-total" style="color:var(--red);">${_fmtByCurr(byCurr,'−')}</span></div>`).join('')
           || '<div style="font-size:12px;color:var(--muted);padding:8px 0;">Sin gastos en el período</div>'}
