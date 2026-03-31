@@ -754,7 +754,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
               <select class="form-select" style="width:auto;padding:5px 9px;font-size:12px;" onchange="incomeAccountFilter=this.value;refresh()" id="income-account-filter">
                 <option value="all">Todas las cuentas</option>
               </select>
-              <select class="form-select" style="width:auto;padding:5px 9px;font-size:12px;" onchange="incomeCatFilter=this.value;refresh()">
+              <select id="income-cat-filter" class="form-select" style="width:auto;padding:5px 9px;font-size:12px;" onchange="incomeCatFilter=this.value;refresh()">
                 <option value="all">Todas las categorías</option>
               </select>
               <button class="btn-primary" style="background:var(--green);color:#fff;" onclick="openTxModal('income')"><span>+</span>Nuevo ingreso</button>
@@ -3059,6 +3059,8 @@ function renderIncomeView(txs,data){
   // Populate account filter
   const af=document.getElementById('income-account-filter');
   if(af){const cur=af.value;af.innerHTML='<option value="all">Todas las cuentas</option>'+data.accounts.map(a=>`<option value="${a.id}"${a.id===cur?' selected':''}>${a.icon||'🏦'} ${a.name}</option>`).join('');}
+  const icf=document.getElementById('income-cat-filter');
+  if(icf){const cur=icf.value;const txCats=new Set(incTxs.map(t=>t.category));const allCats=[...new Set([...getIncomeCats(data),...txCats])];icf.innerHTML='<option value="all">Todas las categorías</option>'+allCats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');}
   let f=[...incTxs];
   if(incomeAccountFilter!=='all')f=f.filter(t=>t.accountId===incomeAccountFilter);
   if(incomeCatFilter!=='all')f=f.filter(t=>t.category===incomeCatFilter);
@@ -3134,7 +3136,7 @@ function renderExpenseView(txs,data){
   const af=document.getElementById('expense-account-filter');
   if(af){const cur=af.value;af.innerHTML='<option value="all">Todas las cuentas</option>'+data.accounts.filter(a=>a.type!=='credit').map(a=>`<option value="${a.id}"${a.id===cur?' selected':''}>${a.icon||'🏦'} ${a.name}</option>`).join('');}
   const cf=document.getElementById('expense-cat-filter');
-  if(cf){const cur=cf.value;const cats=[...new Set(expTxs.map(t=>t.category))];cf.innerHTML='<option value="all">Todas las categorías</option>'+cats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');}
+  if(cf){const cur=cf.value;const txCats=new Set(expTxs.map(t=>t.category));const allCats=[...new Set([...getExpenseCats(data),...txCats])];cf.innerHTML='<option value="all">Todas las categorías</option>'+allCats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');}
 
   let f=[...expTxs];
   if(expenseAccountFilter!=='all')f=f.filter(t=>t.accountId===expenseAccountFilter);
