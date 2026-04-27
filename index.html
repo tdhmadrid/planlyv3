@@ -368,154 +368,243 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 @media(max-width:600px){
   /* ── LAYOUT ── */
   body { background:#0a0a0f; color:#e5e7eb; overflow-x:hidden; }
-  .main { margin-left:0; padding-bottom:80px; }
+  .main { margin-left:0; padding-bottom:84px; }
   .sidebar { display:none !important; }
-  .hamburger { display:none !important; }
+
+  /* ── HAMBURGER: visible en móvil para abrir sidebar ── */
+  .hamburger {
+    display:flex !important;
+    background:rgba(255,255,255,0.08);
+    border-radius:10px;
+    width:36px; height:36px;
+    top:12px; left:12px;
+  }
+  .hamburger span { background:#fff; }
   .mobile-bottom-nav { display:flex !important; }
 
   /* ── TOPBAR ── */
   .topbar {
-    background:rgba(10,10,15,0.92);
+    background:rgba(10,10,15,0.93);
     border-bottom:1px solid rgba(255,255,255,0.06);
     backdrop-filter:blur(20px);
     -webkit-backdrop-filter:blur(20px);
-    padding:12px 16px;
+    padding:12px 16px 12px 56px;
     position:fixed; top:0; left:0; right:0; z-index:100;
+    min-height:56px;
   }
   .topbar-right { gap:6px; }
   .topbar-right .btn-outline { display:none; }
-  .topbar-right .btn-primary { padding:7px 12px; font-size:12px; }
+  .topbar-right .btn-primary { padding:8px 14px; font-size:13px; font-weight:700; border-radius:10px; }
   .topbar-right .btn-primary span { display:none; }
-  .page-title { font-size:17px; color:#fff; }
-  .content { padding:72px 12px 16px; }
+  .page-title { font-size:18px; color:#fff; font-weight:700; }
+  .content { padding:72px 14px 16px; }
 
   /* ── STATS GRID ── */
-  .stats-grid { grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
-  .stat-card { padding:14px 14px; }
+  .stats-grid { grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .stat-card { padding:16px 14px; border-radius:16px; }
   .stat-card.balance { grid-column:span 2; }
   .stat-card.income  { border-left:3px solid #4ade80; }
   .stat-card.expense { border-left:3px solid #f87171; }
   .stat-card.balance { border-left:3px solid #818cf8; }
-  .stat-label { font-size:9px; color:rgba(255,255,255,0.4) !important; }
-  .stat-amount { font-size:18px; color:#fff !important; }
-  .stat-sub { font-size:10px; color:rgba(255,255,255,0.35) !important; }
+  .stat-label { font-size:10px; color:rgba(255,255,255,0.4) !important; margin-bottom:8px; }
+  .stat-amount { font-size:20px; color:#fff !important; }
+  .stat-sub { font-size:11px; color:rgba(255,255,255,0.35) !important; margin-top:5px; }
   .stat-amount.income  { color:#4ade80 !important; }
   .stat-amount.expense { color:#f87171 !important; }
   .stat-amount.balance { color:#fff !important; }
 
-  /* ── CARDS ── */
+  /* ── SECTION CARDS ── */
   .section-card {
     background:rgba(20,20,32,0.96);
     border:1px solid rgba(255,255,255,0.07);
-    border-radius:14px;
+    border-radius:16px;
     box-shadow:none;
-    margin-bottom:12px;
+    margin-bottom:14px;
   }
-  .section-header { padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.06); flex-wrap:wrap; gap:8px; }
-  .section-title { color:rgba(255,255,255,0.9) !important; font-size:13px; }
-  .section-header * { color:rgba(255,255,255,0.9) !important; }
+  .section-header {
+    padding:14px 16px;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .section-title { color:rgba(255,255,255,0.9) !important; font-size:14px; }
+  .section-header * { color:rgba(255,255,255,0.85) !important; }
 
   /* ── LAYOUTS ── */
-  .two-col { grid-template-columns:1fr; gap:12px; }
-  .view-split-layout { grid-template-columns:1fr; }
-  .view-split-aside { display:none; } /* hide pie on mobile to save space */
-  .stats-grid #stat-tc-header { font-size:10px; }
+  .two-col { grid-template-columns:1fr; gap:14px; }
   .form-row { flex-direction:column; gap:0; }
   .cc-grid { grid-template-columns:1fr; }
   .accounts-grid { grid-template-columns:1fr !important; }
 
-  /* ── TRANSACTIONS ── */
-  .transaction-item {
-    padding:11px 14px;
-    border-bottom:1px solid rgba(255,255,255,0.05);
+  /* ── INCOME / EXPENSE SPLIT: pie ARRIBA, lista abajo ── */
+  .view-split-layout {
+    display:flex !important;
+    flex-direction:column !important;
+    gap:14px;
   }
-  .tx-col-right { width:130px; right:14px; }
-  .tx-name  { font-size:13px; color:rgba(255,255,255,0.9) !important; }
-  .tx-meta  { font-size:10px; color:rgba(255,255,255,0.35) !important; }
-  .tx-date  { font-size:10px; color:rgba(255,255,255,0.35) !important; }
-  .tx-amount { font-size:13px; }
+  .view-split-aside {
+    display:block !important;
+    order:-1;                          /* pie va PRIMERO en móvil */
+    padding:16px !important;
+    background:rgba(20,20,32,0.96) !important;
+    border:1px solid rgba(255,255,255,0.07) !important;
+    border-radius:16px !important;
+    box-shadow:none !important;
+    margin-bottom:0 !important;
+  }
+  .view-split-main { order:1; }
+
+  /* ── TRANSACTIONS — fix padding-right para columna de montos ── */
+  .transaction-item {
+    padding:14px 150px 14px 16px;     /* right clearance para tx-col-right */
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .tx-col-right { width:136px; right:12px; gap:3px; }
+  .tx-icon  { width:38px; height:38px; border-radius:12px; flex-shrink:0; }
+  .tx-icon.income-icon  { background:rgba(74,222,128,0.14) !important; }
+  .tx-icon.expense-icon { background:rgba(248,113,113,0.14) !important; }
+  .tx-name  { font-size:13px; font-weight:600; color:rgba(255,255,255,0.92) !important; }
+  .tx-meta  { font-size:10px; color:rgba(255,255,255,0.32) !important; gap:3px; }
+  .tx-date  { font-size:10px; color:rgba(255,255,255,0.32) !important; }
+  .tx-created { display:none; }        /* ocultar "creado" en móvil */
+  .tx-amount { font-size:14px; font-weight:700; }
   .tx-amount.debit  { color:#f87171 !important; }
   .tx-amount.credit { color:#4ade80 !important; }
-  .tx-icon  { width:34px; height:34px; border-radius:10px; }
-  .tx-icon.income-icon  { background:rgba(74,222,128,0.12) !important; }
-  .tx-icon.expense-icon { background:rgba(248,113,113,0.12) !important; }
-  .row-actions { opacity:1; }
+  .tx-amount.pos    { color:#4ade80 !important; }
+  .tx-amount.neg    { color:#f87171 !important; }
+  .row-actions { opacity:1; margin-top:0; }
+  .row-actions .btn-sm { padding:4px 8px; font-size:10px; }
 
   /* ── MODALS ── */
   .modal-overlay { align-items:flex-end !important; padding:0 !important; }
   .modal {
     background:#12121f !important;
-    border:1px solid rgba(255,255,255,0.1) !important;
-    border-radius:20px 20px 0 0 !important;
+    border:1px solid rgba(255,255,255,0.08) !important;
+    border-radius:22px 22px 0 0 !important;
     width:100% !important; max-width:100% !important;
-    max-height:92vh; padding:24px 20px 32px;
+    max-height:92vh;
+    padding:20px 18px calc(20px + env(safe-area-inset-bottom));
   }
-  .modal-title { color:#fff !important; font-size:16px; }
-  .modal-actions { border-top-color:rgba(255,255,255,0.08) !important; padding-top:14px; }
-  .form-label { color:rgba(255,255,255,0.45) !important; }
+  .modal-title { color:#fff !important; font-size:17px; font-weight:700; margin-bottom:18px; }
+  .modal-actions {
+    border-top:1px solid rgba(255,255,255,0.08) !important;
+    padding-top:14px; margin-top:18px;
+  }
+  .form-label { color:rgba(255,255,255,0.4) !important; font-size:11px; }
   .form-input,.form-select {
-    background:rgba(255,255,255,0.06) !important;
+    background:rgba(255,255,255,0.07) !important;
     border:1px solid rgba(255,255,255,0.1) !important;
     color:#fff !important;
+    font-size:15px;
+    padding:11px 13px;
+    border-radius:10px;
   }
   .form-input::placeholder { color:rgba(255,255,255,0.2) !important; }
-  .form-input:focus,.form-select:focus { border-color:var(--accent) !important; }
-  .btn-save { background:var(--accent); }
-  .btn-cancel { border-color:rgba(255,255,255,0.1) !important; color:rgba(255,255,255,0.5) !important; }
+  .form-input:focus,.form-select:focus {
+    border-color:var(--accent) !important;
+    box-shadow:0 0 0 3px rgba(99,102,241,0.2) !important;
+  }
+  .btn-save { background:var(--accent); color:#fff; font-size:14px; padding:12px; border-radius:10px; }
+  .btn-cancel { border-color:rgba(255,255,255,0.1) !important; color:rgba(255,255,255,0.45) !important; padding:12px; border-radius:10px; }
   .btn-outline { border-color:rgba(255,255,255,0.12) !important; color:rgba(255,255,255,0.6) !important; }
   .tab-btn { border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.4); }
 
   /* ── CREDIT CARDS ── */
-  .credit-card { border-radius:16px; }
-  .cc-stats { grid-template-columns:1fr 1fr; gap:5px; }
+  .credit-card { border-radius:18px; padding:18px; }
+  .cc-stats { grid-template-columns:1fr 1fr; gap:6px; margin-top:12px; }
   .cc-stat:last-child { grid-column:span 2; }
+  .cc-stat { padding:10px 12px; border-radius:12px; }
+  .cc-stat-val { font-size:13px !important; }
   .cc-section-title { color:rgba(255,255,255,0.3) !important; border-color:rgba(255,255,255,0.06) !important; }
 
   /* ── SUMMARY STRIP ── */
-  #dash-summary-strip { gap:8px; }
+  #dash-summary-strip { gap:10px; }
   #dash-summary-strip > div {
     background:rgba(20,20,32,0.96) !important;
     border-color:rgba(255,255,255,0.07) !important;
-    padding:12px 14px;
+    padding:16px !important;
+    border-radius:16px !important;
   }
 
   /* ── PATRIMONY ── */
   .patrimony-card {
     background:rgba(20,20,32,0.96) !important;
     border-color:rgba(255,255,255,0.07) !important;
+    border-radius:16px !important;
+    padding:16px !important;
   }
   .patrimony-title { color:rgba(255,255,255,0.9) !important; }
-  .patrimony-currencies { gap:8px !important; flex-direction:column; }
+  .patrimony-currencies { gap:10px !important; flex-direction:column; }
   .currency-pill {
-    background:rgba(255,255,255,0.05) !important;
+    background:rgba(255,255,255,0.06) !important;
     border-color:rgba(255,255,255,0.08) !important;
-    padding:10px 14px !important;
+    padding:14px 16px !important;
+    border-radius:14px !important;
   }
-  .currency-amount { color:#fff !important; }
-  .currency-label,.currency-sub { color:rgba(255,255,255,0.4) !important; }
+  .currency-amount { color:#fff !important; font-size:20px !important; }
+  .currency-label { color:rgba(255,255,255,0.4) !important; }
+  .currency-sub   { color:rgba(255,255,255,0.4) !important; }
 
-  /* ── OTHER VIEWS ── */
-  .source-item { border-color:rgba(255,255,255,0.05) !important; padding:11px 14px; }
-  .source-name  { color:rgba(255,255,255,0.9) !important; }
+  /* ── UPCOMING / PROVIDERS / SOURCES ── */
+  .upcoming-item { padding:13px 16px; border-color:rgba(255,255,255,0.05) !important; }
+  .source-item { border-color:rgba(255,255,255,0.05) !important; padding:13px 16px; }
+  .source-name  { color:rgba(255,255,255,0.9) !important; font-size:13px; }
   .source-meta,.source-count { color:rgba(255,255,255,0.35) !important; }
-  .budget-item  { border-color:rgba(255,255,255,0.05) !important; padding:11px 14px; }
-  .provider-card { background:rgba(20,20,32,0.96) !important; border-color:rgba(255,255,255,0.07) !important; padding:12px 14px; }
-  .inv-card { background:rgba(20,20,32,0.96) !important; border-color:rgba(255,255,255,0.07) !important; box-shadow:none; }
-  .inv-ticker { color:#fff !important; }
-  .goal-card { background:rgba(20,20,32,0.96) !important; border-color:rgba(255,255,255,0.07) !important; box-shadow:none; }
-  .goal-name { color:#fff !important; }
-  .sub-card { background:rgba(20,20,32,0.96) !important; border-color:rgba(255,255,255,0.07) !important; box-shadow:none; }
-  .sub-name { color:rgba(255,255,255,0.9) !important; }
-  .report-card { background:rgba(20,20,32,0.96) !important; border-color:rgba(255,255,255,0.07) !important; box-shadow:none; }
-  .report-row { border-color:rgba(255,255,255,0.05) !important; }
+  .source-total { font-size:15px !important; }
+  .budget-item  { border-color:rgba(255,255,255,0.05) !important; padding:13px 16px; }
+  .provider-card {
+    background:rgba(20,20,32,0.96) !important;
+    border-color:rgba(255,255,255,0.07) !important;
+    padding:14px 16px;
+    border-radius:14px !important;
+  }
+  .inv-card {
+    background:rgba(20,20,32,0.96) !important;
+    border-color:rgba(255,255,255,0.07) !important;
+    box-shadow:none; border-radius:16px !important;
+  }
+  .inv-ticker { color:#fff !important; font-size:18px !important; }
+  .goal-card  {
+    background:rgba(20,20,32,0.96) !important;
+    border-color:rgba(255,255,255,0.07) !important;
+    box-shadow:none; border-radius:16px !important;
+  }
+  .goal-name  { color:#fff !important; }
+  .sub-card   {
+    background:rgba(20,20,32,0.96) !important;
+    border-color:rgba(255,255,255,0.07) !important;
+    box-shadow:none; border-radius:16px !important;
+    padding:14px 16px;
+  }
+  .sub-name   { color:rgba(255,255,255,0.9) !important; }
+  .report-card {
+    background:rgba(20,20,32,0.96) !important;
+    border-color:rgba(255,255,255,0.07) !important;
+    box-shadow:none; border-radius:16px !important;
+    padding:16px !important;
+  }
+  .report-row { border-color:rgba(255,255,255,0.05) !important; padding:9px 0; }
   .report-section-title { color:rgba(255,255,255,0.9) !important; border-color:rgba(255,255,255,0.08) !important; }
-  .empty { color:rgba(255,255,255,0.3) !important; }
+  .empty { color:rgba(255,255,255,0.3) !important; padding:40px 20px; }
+
+  /* ── PIE CHART en aside ── */
+  #income-pie-legend, #expense-pie-legend { font-size:12px; }
+  .pie-card-title { color:rgba(255,255,255,0.9) !important; font-size:13px; font-weight:600; }
 
   /* ── TOAST ── */
-  .flujo-toast { left:12px; right:12px; bottom:90px; font-size:12px; border-radius:12px; }
+  .flujo-toast { left:12px; right:12px; bottom:88px; font-size:12px; border-radius:14px; }
 
-  /* ── AUTH SCREEN ── */
-  #auth-screen > div { padding:40px 24px 32px !important; }
+  /* ── AUTH ── */
+  #auth-screen > div { padding:40px 22px 32px !important; }
+
+  /* ── SIDEBAR cuando está abierto en móvil ── */
+  .sidebar.open {
+    display:flex !important;
+    position:fixed;
+    z-index:500;
+    width:280px;
+    box-shadow:0 0 0 100vw rgba(0,0,0,0.6);
+  }
 }
 /* Already-deducted badge */
 .deducted-badge{font-family:var(--font-text);font-size:9px;font-weight:600;letter-spacing:0.3px;padding:2px 8px;border-radius:5px;background:rgba(37,99,235,0.08);color:var(--blue);white-space:nowrap;}
