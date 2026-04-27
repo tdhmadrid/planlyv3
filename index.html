@@ -3493,6 +3493,28 @@ function txHTML(tx,data,showActions=true){
   const showDeductedBtn=showActions&&!isInc&&!isCreditCard&&isPast;
   // Attachment link
   const attHTML=tx.attachment?`<a href="${tx.attachment.data}" download="${tx.attachment.name}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;background:rgba(44,95,138,0.09);border:1px solid rgba(44,95,138,0.2);border-radius:6px;font-size:10px;color:var(--blue);text-decoration:none;font-family:'DM Mono',monospace;">${tx.attachment.type==='application/pdf'?'📄':'🖼️'} ${tx.attachment.name}</a>`:'';
+  const isMob = window.innerWidth <= 600;
+  if(isMob){
+    // ── MOBILE layout: flex row, amount always visible ──
+    const amtColor = isInc ? '#4ade80' : '#f87171';
+    const metaShort = [tx.category, acc?(acc.icon||'🏦')+' '+acc.name:''].filter(Boolean).join(' · ');
+    return `<div class="transaction-item" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06);${alreadyDeducted?'border-left:3px solid #6366f1;':''}${alreadyAdded?'border-left:3px solid #4ade80;':''}">
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+        ${confirmed
+          ? `<span style="width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0;"></span>`
+          : `<span style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.2);flex-shrink:0;"></span>`}
+        <div class="tx-icon ${isInc?'income-icon':'expense-icon'}" style="width:40px;height:40px;border-radius:12px;flex-shrink:0;">${catEmoji(tx.category)}</div>
+      </div>
+      <div style="flex:1;min-width:0;overflow:hidden;">
+        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tx.desc}${isCreditCard?' 💳':''}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">${metaShort}${isFX?' · FX':''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;min-width:80px;max-width:45%;">
+        <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:${amtColor};letter-spacing:-0.4px;white-space:nowrap;">${isInc?'+':'−'}${fmt(dispAmt,dispCurr)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;white-space:nowrap;">${fmtDate(tx.date,true)}</div>
+      </div>
+    </div>`;
+  }
   return `<div class="transaction-item" style="${confirmed?'':'opacity:0.88'}${alreadyDeducted?';border-left:3px solid var(--blue)':''}${alreadyAdded?';border-left:3px solid var(--green)':''}">
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-top:1px;">
       ${confirmed?`<span class="confirmed-dot" title="Aplicado"></span>`:`<span class="pending-dot" title="Pendiente"></span>`}
@@ -3542,6 +3564,21 @@ function creditPaymentHTML(tx,data){
   const ccAcc=data.accounts.find(a=>a.id===tx.creditAccountId);
   const fromCurr=fromAcc?.currency||'MXN';
   const ccCurr=ccAcc?.currency||fromCurr;
+  const isMobCP = window.innerWidth <= 600;
+  if(isMobCP){
+    return `<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06);border-left:3px solid rgba(201,168,76,0.5);">
+      <span style="width:7px;height:7px;border-radius:50%;background:#4ade80;flex-shrink:0;"></span>
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(201,168,76,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">💳</div>
+      <div style="flex:1;min-width:0;overflow:hidden;">
+        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${tx.desc}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">Pago tarjeta${fromAcc?' · '+fromAcc.name:''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;">
+        <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#f87171;white-space:nowrap;">−${fmt(tx.amount,fromCurr)}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">${fmtDate(tx.date,true)}</div>
+      </div>
+    </div>`;
+  }
   return `<div class="transaction-item" style="opacity:0.92">
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-top:1px;">
       <span class="confirmed-dot" title="Pagado"></span>
@@ -3585,6 +3622,23 @@ function transferHTML(tr,data){
   const tA=data.accounts.find(a=>a.id===tr.toId);
   const fC=fA?.currency||'MXN', tC=tA?.currency||'MXN';
   const confirmed=!!tr.confirmed;
+  const isMobTr = window.innerWidth <= 600;
+  if(isMobTr){
+    const nameStr = `${fA?fA.name:'—'} → ${tA?tA.name:'—'}`;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06);border-left:3px solid #6366f1;">
+      <span style="width:7px;height:7px;border-radius:50%;background:${confirmed?'#4ade80':'rgba(255,255,255,0.2)'};flex-shrink:0;"></span>
+      <div style="width:40px;height:40px;border-radius:12px;background:rgba(99,102,241,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">↔</div>
+      <div style="flex:1;min-width:0;overflow:hidden;">
+        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${nameStr}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">Traspaso${tr.isFX?' · FX':''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;">
+        <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:#f87171;white-space:nowrap;">−${fmt(tr.amountSent,fC)}</div>
+        ${tr.isFX?`<div style="font-family:'DM Mono',monospace;font-size:11px;color:#4ade80;white-space:nowrap;">+${fmt(tr.amountReceived,tC)}</div>`:''}
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;">${fmtDate(tr.date,true)}</div>
+      </div>
+    </div>`;
+  }
   return `<div class="transaction-item" style="${confirmed?'':'opacity:0.88'};border-left:3px solid var(--blue)">
     <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-top:1px;">
       ${confirmed?`<span class="confirmed-dot" title="Aplicado"></span>`:`<span class="pending-dot" title="Pendiente"></span>`}
