@@ -459,33 +459,36 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   /* ════════ TRANSACTIONS — arquitectura nueva sin absolute ════════ */
   /* Convertimos el item a flex column para que el monto siempre sea visible */
   .transaction-item {
-    position:relative;
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
-    padding:14px 16px;
-    border-bottom:1px solid rgba(255,255,255,0.06);
-    min-height:auto;
+    position:relative!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:12px!important;
+    padding:14px 16px!important;
+    border-bottom:1px solid rgba(255,255,255,0.06)!important;
+    min-height:auto!important;
   }
-  /* El tx-col-right pasa a ser parte del flujo normal */
   .tx-col-right {
     position:static!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
     width:auto!important;
-    min-width:90px;
-    flex-shrink:0;
-    display:flex;
-    flex-direction:column;
-    align-items:flex-end;
-    justify-content:center;
-    gap:2px;
-    margin-left:auto;
+    min-width:80px!important;
+    max-width:40%!important;
+    flex-shrink:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+    gap:2px!important;
+    margin-left:auto!important;
   }
-  .tx-info { flex:1; min-width:0; }
+  .tx-info { flex:1!important; min-width:0!important; overflow:hidden!important; }
   .tx-icon { width:40px; height:40px; border-radius:12px; flex-shrink:0; }
   .tx-icon.income-icon  { background:rgba(74,222,128,0.14)!important; }
   .tx-icon.expense-icon { background:rgba(248,113,113,0.14)!important; }
-  .tx-name { font-size:14px; font-weight:600; color:rgba(255,255,255,0.92)!important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px; }
-  .tx-meta { font-size:11px; color:rgba(255,255,255,0.32)!important; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block!important; line-height:1.4; }
+  .tx-name { font-size:14px!important; font-weight:600!important; color:rgba(255,255,255,0.92)!important; white-space:nowrap!important; overflow:hidden!important; text-overflow:ellipsis!important; margin-bottom:3px!important; max-width:100%!important; }
+  .tx-meta { font-size:11px!important; color:rgba(255,255,255,0.32)!important; white-space:nowrap!important; overflow:hidden!important; text-overflow:ellipsis!important; display:block!important; line-height:1.4!important; max-width:100%!important; }
   .tx-date { font-size:11px; color:rgba(255,255,255,0.35)!important; font-weight:500; white-space:nowrap; }
   .tx-created { display:none!important; }
   .tx-amount { font-size:15px; font-weight:700; letter-spacing:-0.4px; white-space:nowrap; text-align:right; }
