@@ -366,20 +366,21 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 /* ── Mobile (≤ 600px) ── */
 @media(max-width:600px){
-  /* ── LAYOUT ── */
+  /* ── BASE ── */
+  html { font-size: 16px; -webkit-text-size-adjust: 100%; }
   body { background:#0a0a0f; color:#e5e7eb; overflow-x:hidden; }
   .main { margin-left:0; padding-bottom:84px; }
   .sidebar { display:none !important; }
 
-  /* ── HAMBURGER: visible en móvil para abrir sidebar ── */
+  /* ── HAMBURGER ── */
   .hamburger {
     display:flex !important;
-    background:rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.1);
     border-radius:10px;
-    width:36px; height:36px;
-    top:12px; left:12px;
+    width:38px; height:38px;
+    top:11px; left:12px;
   }
-  .hamburger span { background:#fff; }
+  .hamburger span { background:#fff; width:16px; height:2px; border-radius:1px; }
   .mobile-bottom-nav { display:flex !important; }
 
   /* ── TOPBAR ── */
@@ -388,222 +389,201 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     border-bottom:1px solid rgba(255,255,255,0.06);
     backdrop-filter:blur(20px);
     -webkit-backdrop-filter:blur(20px);
-    padding:12px 16px 12px 56px;
+    padding:11px 14px 11px 58px;
     position:fixed; top:0; left:0; right:0; z-index:100;
-    min-height:56px;
+    min-height:58px; align-items:center;
   }
-  .topbar-right { gap:6px; }
+  .topbar-right { gap:8px; }
   .topbar-right .btn-outline { display:none; }
-  .topbar-right .btn-primary { padding:8px 14px; font-size:13px; font-weight:700; border-radius:10px; }
+  .topbar-right .btn-primary {
+    padding:9px 16px; font-size:14px;
+    font-weight:700; border-radius:12px;
+  }
   .topbar-right .btn-primary span { display:none; }
-  .page-title { font-size:18px; color:#fff; font-weight:700; }
-  .content { padding:72px 14px 16px; }
+  .page-title { font-size:17px; color:#fff; font-weight:700; }
+  .content { padding:70px 12px 16px; }
 
   /* ── STATS GRID ── */
   .stats-grid { grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .stats-grid #stat-tc-header { grid-column:span 2; font-size:11px; }
   .stat-card { padding:16px 14px; border-radius:16px; }
   .stat-card.balance { grid-column:span 2; }
   .stat-card.income  { border-left:3px solid #4ade80; }
   .stat-card.expense { border-left:3px solid #f87171; }
   .stat-card.balance { border-left:3px solid #818cf8; }
-  .stat-label { font-size:10px; color:rgba(255,255,255,0.4) !important; margin-bottom:8px; }
-  .stat-amount { font-size:20px; color:#fff !important; }
-  .stat-sub { font-size:11px; color:rgba(255,255,255,0.35) !important; margin-top:5px; }
-  .stat-amount.income  { color:#4ade80 !important; }
-  .stat-amount.expense { color:#f87171 !important; }
-  .stat-amount.balance { color:#fff !important; }
+  .stat-label { font-size:10px; color:rgba(255,255,255,0.4)!important; margin-bottom:6px; }
+  .stat-amount { font-size:20px; color:#fff!important; }
+  .stat-amount.income  { color:#4ade80!important; }
+  .stat-amount.expense { color:#f87171!important; }
+  .stat-amount.balance { color:#fff!important; }
+  .stat-sub { font-size:11px; color:rgba(255,255,255,0.35)!important; margin-top:5px; }
+  .stat-multi-row { font-size:16px!important; }
 
   /* ── SECTION CARDS ── */
   .section-card {
-    background:rgba(20,20,32,0.96);
+    background:rgba(18,18,28,0.98);
     border:1px solid rgba(255,255,255,0.07);
-    border-radius:16px;
-    box-shadow:none;
-    margin-bottom:14px;
+    border-radius:16px; box-shadow:none; margin-bottom:12px;
   }
-  .section-header {
-    padding:14px 16px;
-    border-bottom:1px solid rgba(255,255,255,0.06);
-    flex-wrap:wrap;
-    gap:8px;
-  }
-  .section-title { color:rgba(255,255,255,0.9) !important; font-size:14px; }
-  .section-header * { color:rgba(255,255,255,0.85) !important; }
+  .section-header { padding:14px 16px; border-bottom:1px solid rgba(255,255,255,0.07); flex-wrap:wrap; gap:8px; }
+  .section-title { color:rgba(255,255,255,0.92)!important; font-size:15px; font-weight:700; }
+  .section-header * { color:rgba(255,255,255,0.85)!important; }
+  .section-header .form-select { background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.1); color:#fff; font-size:13px; }
 
   /* ── LAYOUTS ── */
-  .two-col { grid-template-columns:1fr; gap:14px; }
+  .two-col { grid-template-columns:1fr; gap:12px; }
   .form-row { flex-direction:column; gap:0; }
   .cc-grid { grid-template-columns:1fr; }
-  .accounts-grid { grid-template-columns:1fr !important; }
+  .accounts-grid { grid-template-columns:1fr!important; }
 
-  /* ── INCOME / EXPENSE SPLIT: pie ARRIBA, lista abajo ── */
-  .view-split-layout {
-    display:flex !important;
-    flex-direction:column !important;
-    gap:14px;
-  }
+  /* ── INCOME/EXPENSE SPLIT: pie ARRIBA, lista abajo ── */
+  .view-split-layout { display:flex!important; flex-direction:column!important; gap:12px; }
   .view-split-aside {
-    display:block !important;
-    order:-1;                          /* pie va PRIMERO en móvil */
-    padding:16px !important;
-    background:rgba(20,20,32,0.96) !important;
-    border:1px solid rgba(255,255,255,0.07) !important;
-    border-radius:16px !important;
-    box-shadow:none !important;
-    margin-bottom:0 !important;
+    display:block!important; order:-1;
+    padding:16px!important;
+    background:rgba(18,18,28,0.98)!important;
+    border:1px solid rgba(255,255,255,0.07)!important;
+    border-radius:16px!important;
+    box-shadow:none!important; margin-bottom:0!important;
   }
   .view-split-main { order:1; }
+  .pie-card-title { color:rgba(255,255,255,0.9)!important; font-size:13px!important; font-weight:600; margin-bottom:8px; }
 
-  /* ── TRANSACTIONS — fix padding-right para columna de montos ── */
+  /* ── TRANSACTIONS ── */
+  /* Key fix: right padding = tx-col-right width + right offset */
   .transaction-item {
-    padding:14px 150px 14px 16px;     /* right clearance para tx-col-right */
+    padding:14px 152px 14px 14px;
     border-bottom:1px solid rgba(255,255,255,0.06);
+    min-height:auto;
   }
-  .tx-col-right { width:136px; right:12px; gap:3px; }
-  .tx-icon  { width:38px; height:38px; border-radius:12px; flex-shrink:0; }
-  .tx-icon.income-icon  { background:rgba(74,222,128,0.14) !important; }
-  .tx-icon.expense-icon { background:rgba(248,113,113,0.14) !important; }
-  .tx-name  { font-size:13px; font-weight:600; color:rgba(255,255,255,0.92) !important; }
-  .tx-meta  { font-size:10px; color:rgba(255,255,255,0.32) !important; gap:3px; }
-  .tx-date  { font-size:10px; color:rgba(255,255,255,0.32) !important; }
-  .tx-created { display:none; }        /* ocultar "creado" en móvil */
-  .tx-amount { font-size:14px; font-weight:700; }
-  .tx-amount.debit  { color:#f87171 !important; }
-  .tx-amount.credit { color:#4ade80 !important; }
-  .tx-amount.pos    { color:#4ade80 !important; }
-  .tx-amount.neg    { color:#f87171 !important; }
-  .row-actions { opacity:1; margin-top:0; }
-  .row-actions .btn-sm { padding:4px 8px; font-size:10px; }
+  .tx-col-right { width:138px; right:10px; }
+  .tx-icon { width:38px; height:38px; border-radius:12px; }
+  .tx-icon.income-icon  { background:rgba(74,222,128,0.13)!important; }
+  .tx-icon.expense-icon { background:rgba(248,113,113,0.13)!important; }
+  .tx-name { font-size:13px; font-weight:600; color:rgba(255,255,255,0.92)!important; }
+  .tx-meta { font-size:11px; color:rgba(255,255,255,0.35)!important; flex-wrap:wrap; }
+  .tx-date { font-size:11px; color:rgba(255,255,255,0.35)!important; font-weight:500; }
+  .tx-created { display:none!important; }
+  .tx-amount { font-size:14px; font-weight:700; letter-spacing:-0.3px; }
+  .tx-amount.debit  { color:#f87171!important; }
+  .tx-amount.credit { color:#4ade80!important; }
+  .tx-amount.pos    { color:#4ade80!important; }
+  .tx-amount.neg    { color:#f87171!important; }
+  /* Row actions: hide on mobile to avoid layout crush */
+  .row-actions { display:none!important; }
 
   /* ── MODALS ── */
-  .modal-overlay { align-items:flex-end !important; padding:0 !important; }
+  .modal-overlay { align-items:flex-end!important; padding:0!important; }
   .modal {
-    background:#12121f !important;
-    border:1px solid rgba(255,255,255,0.08) !important;
-    border-radius:22px 22px 0 0 !important;
-    width:100% !important; max-width:100% !important;
-    max-height:92vh;
-    padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    background:#12121f!important;
+    border:1px solid rgba(255,255,255,0.08)!important;
+    border-radius:22px 22px 0 0!important;
+    width:100%!important; max-width:100%!important;
+    max-height:92vh; padding:22px 18px 28px;
+    overflow-y:auto;
   }
-  .modal-title { color:#fff !important; font-size:17px; font-weight:700; margin-bottom:18px; }
-  .modal-actions {
-    border-top:1px solid rgba(255,255,255,0.08) !important;
-    padding-top:14px; margin-top:18px;
-  }
-  .form-label { color:rgba(255,255,255,0.4) !important; font-size:11px; }
+  .modal-title { color:#fff!important; font-size:17px; font-weight:700; margin-bottom:20px; }
+  .modal-actions { border-top:1px solid rgba(255,255,255,0.08)!important; padding-top:14px; margin-top:20px; }
+  .form-label { color:rgba(255,255,255,0.4)!important; font-size:12px; letter-spacing:0.6px; }
+  .form-group { margin-bottom:16px; }
   .form-input,.form-select {
-    background:rgba(255,255,255,0.07) !important;
-    border:1px solid rgba(255,255,255,0.1) !important;
-    color:#fff !important;
-    font-size:15px;
-    padding:11px 13px;
-    border-radius:10px;
+    background:rgba(255,255,255,0.07)!important;
+    border:1px solid rgba(255,255,255,0.12)!important;
+    color:#fff!important; font-size:15px; padding:13px 14px; border-radius:12px;
   }
-  .form-input::placeholder { color:rgba(255,255,255,0.2) !important; }
-  .form-input:focus,.form-select:focus {
-    border-color:var(--accent) !important;
-    box-shadow:0 0 0 3px rgba(99,102,241,0.2) !important;
-  }
-  .btn-save { background:var(--accent); color:#fff; font-size:14px; padding:12px; border-radius:10px; }
-  .btn-cancel { border-color:rgba(255,255,255,0.1) !important; color:rgba(255,255,255,0.45) !important; padding:12px; border-radius:10px; }
-  .btn-outline { border-color:rgba(255,255,255,0.12) !important; color:rgba(255,255,255,0.6) !important; }
-  .tab-btn { border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.4); }
+  .form-input::placeholder { color:rgba(255,255,255,0.25)!important; }
+  .form-input:focus,.form-select:focus { border-color:var(--accent)!important; box-shadow:0 0 0 3px rgba(99,102,241,0.2)!important; }
+  .btn-save { background:var(--accent)!important; color:#fff; font-size:15px; padding:13px; border-radius:12px; font-weight:700; }
+  .btn-cancel { border-color:rgba(255,255,255,0.1)!important; color:rgba(255,255,255,0.45)!important; padding:13px; border-radius:12px; }
+  .btn-outline { border-color:rgba(255,255,255,0.12)!important; color:rgba(255,255,255,0.6)!important; }
+  .tab-btn { border-color:rgba(255,255,255,0.1)!important; color:rgba(255,255,255,0.4)!important; padding:10px; }
+  .modal-tabs { gap:6px; }
+  .modal-tab { font-size:13px; padding:8px 12px; }
+  .type-toggle { gap:8px; margin-bottom:16px; }
+  .type-btn { padding:10px; font-size:14px; border-radius:10px; }
 
   /* ── CREDIT CARDS ── */
   .credit-card { border-radius:18px; padding:18px; }
-  .cc-stats { grid-template-columns:1fr 1fr; gap:6px; margin-top:12px; }
+  .cc-grid { gap:12px; }
+  .cc-stats { grid-template-columns:1fr 1fr; gap:6px; margin-top:14px; }
   .cc-stat:last-child { grid-column:span 2; }
   .cc-stat { padding:10px 12px; border-radius:12px; }
-  .cc-stat-val { font-size:13px !important; }
-  .cc-section-title { color:rgba(255,255,255,0.3) !important; border-color:rgba(255,255,255,0.06) !important; }
+  .cc-stat-val { font-size:14px!important; }
+  .cc-stat-label { font-size:9px!important; }
+  .cc-name { font-size:16px; }
+  .cc-pay-btn { padding:12px; font-size:14px; border-radius:12px; margin-top:16px; }
+  .cc-section-title { color:rgba(255,255,255,0.35)!important; border-color:rgba(255,255,255,0.07)!important; font-size:11px; margin-bottom:16px; }
+
+  /* ── ACCOUNTS GRID ── */
+  .account-card { border-radius:16px; padding:16px; }
 
   /* ── SUMMARY STRIP ── */
   #dash-summary-strip { gap:10px; }
-  #dash-summary-strip > div {
-    background:rgba(20,20,32,0.96) !important;
-    border-color:rgba(255,255,255,0.07) !important;
-    padding:16px !important;
-    border-radius:16px !important;
-  }
+  #dash-summary-strip > div { background:rgba(18,18,28,0.98)!important; border-color:rgba(255,255,255,0.07)!important; padding:16px!important; border-radius:16px!important; }
+  #dash-subs-amount { font-size:22px!important; }
+  #dash-budget-pct { font-size:22px!important; }
 
   /* ── PATRIMONY ── */
-  .patrimony-card {
-    background:rgba(20,20,32,0.96) !important;
-    border-color:rgba(255,255,255,0.07) !important;
-    border-radius:16px !important;
-    padding:16px !important;
-  }
-  .patrimony-title { color:rgba(255,255,255,0.9) !important; }
-  .patrimony-currencies { gap:10px !important; flex-direction:column; }
-  .currency-pill {
-    background:rgba(255,255,255,0.06) !important;
-    border-color:rgba(255,255,255,0.08) !important;
-    padding:14px 16px !important;
-    border-radius:14px !important;
-  }
-  .currency-amount { color:#fff !important; font-size:20px !important; }
-  .currency-label { color:rgba(255,255,255,0.4) !important; }
-  .currency-sub   { color:rgba(255,255,255,0.4) !important; }
+  .patrimony-card { background:rgba(18,18,28,0.98)!important; border-color:rgba(255,255,255,0.07)!important; border-radius:16px!important; padding:16px!important; }
+  .patrimony-header { margin-bottom:12px; flex-wrap:wrap; gap:8px; }
+  .patrimony-title { color:rgba(255,255,255,0.9)!important; font-size:15px!important; }
+  .patrimony-currencies { gap:10px!important; flex-direction:column; }
+  .currency-pill { background:rgba(255,255,255,0.06)!important; border-color:rgba(255,255,255,0.09)!important; padding:14px 16px!important; border-radius:14px!important; }
+  .currency-amount { color:#fff!important; font-size:22px!important; }
+  .currency-label { color:rgba(255,255,255,0.4)!important; font-size:11px!important; }
+  .currency-sub   { color:rgba(255,255,255,0.4)!important; }
 
-  /* ── UPCOMING / PROVIDERS / SOURCES ── */
-  .upcoming-item { padding:13px 16px; border-color:rgba(255,255,255,0.05) !important; }
-  .source-item { border-color:rgba(255,255,255,0.05) !important; padding:13px 16px; }
-  .source-name  { color:rgba(255,255,255,0.9) !important; font-size:13px; }
-  .source-meta,.source-count { color:rgba(255,255,255,0.35) !important; }
-  .source-total { font-size:15px !important; }
-  .budget-item  { border-color:rgba(255,255,255,0.05) !important; padding:13px 16px; }
-  .provider-card {
-    background:rgba(20,20,32,0.96) !important;
-    border-color:rgba(255,255,255,0.07) !important;
-    padding:14px 16px;
-    border-radius:14px !important;
-  }
-  .inv-card {
-    background:rgba(20,20,32,0.96) !important;
-    border-color:rgba(255,255,255,0.07) !important;
-    box-shadow:none; border-radius:16px !important;
-  }
-  .inv-ticker { color:#fff !important; font-size:18px !important; }
-  .goal-card  {
-    background:rgba(20,20,32,0.96) !important;
-    border-color:rgba(255,255,255,0.07) !important;
-    box-shadow:none; border-radius:16px !important;
-  }
-  .goal-name  { color:#fff !important; }
-  .sub-card   {
-    background:rgba(20,20,32,0.96) !important;
-    border-color:rgba(255,255,255,0.07) !important;
-    box-shadow:none; border-radius:16px !important;
-    padding:14px 16px;
-  }
-  .sub-name   { color:rgba(255,255,255,0.9) !important; }
-  .report-card {
-    background:rgba(20,20,32,0.96) !important;
-    border-color:rgba(255,255,255,0.07) !important;
-    box-shadow:none; border-radius:16px !important;
-    padding:16px !important;
-  }
-  .report-row { border-color:rgba(255,255,255,0.05) !important; padding:9px 0; }
-  .report-section-title { color:rgba(255,255,255,0.9) !important; border-color:rgba(255,255,255,0.08) !important; }
-  .empty { color:rgba(255,255,255,0.3) !important; padding:40px 20px; }
+  /* ── UPCOMING / SOURCES / BUDGET ── */
+  .upcoming-item { padding:13px 16px; border-color:rgba(255,255,255,0.05)!important; }
+  .source-item { border-color:rgba(255,255,255,0.05)!important; padding:13px 16px; }
+  .source-name  { color:rgba(255,255,255,0.9)!important; font-size:14px; }
+  .source-meta,.source-count { color:rgba(255,255,255,0.35)!important; }
+  .source-total { font-size:16px!important; }
+  .budget-item  { border-color:rgba(255,255,255,0.05)!important; padding:14px 16px; }
 
-  /* ── PIE CHART en aside ── */
-  #income-pie-legend, #expense-pie-legend { font-size:12px; }
-  .pie-card-title { color:rgba(255,255,255,0.9) !important; font-size:13px; font-weight:600; }
+  /* ── PROVIDERS ── */
+  .provider-card { background:rgba(18,18,28,0.98)!important; border-color:rgba(255,255,255,0.07)!important; padding:14px 16px; border-radius:14px!important; margin-bottom:10px; }
+
+  /* ── INVESTMENTS / GOALS / SUBS ── */
+  .inv-card { background:rgba(18,18,28,0.98)!important; border-color:rgba(255,255,255,0.07)!important; box-shadow:none; border-radius:16px!important; }
+  .inv-ticker { color:#fff!important; font-size:18px!important; }
+  .goal-card { background:rgba(18,18,28,0.98)!important; border-color:rgba(255,255,255,0.07)!important; box-shadow:none; border-radius:16px!important; margin-bottom:10px; }
+  .goal-name { color:#fff!important; font-size:15px!important; }
+
+  /* ── SUBSCRIPTIONS FIX — compact meta, no wrapping ── */
+  /* Suscripciones usan transaction-item, reducir info en móvil */
+  #subscriptions-list .tx-meta { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+  #subscriptions-list .tx-col-right { width:120px; }
+  #subscriptions-list .transaction-item { padding:13px 134px 13px 14px; }
+
+  /* ── REPORT ── */
+  .report-card { background:rgba(18,18,28,0.98)!important; border-color:rgba(255,255,255,0.07)!important; box-shadow:none; border-radius:16px!important; padding:16px!important; }
+  .report-row { border-color:rgba(255,255,255,0.05)!important; padding:9px 0; font-size:12px; }
+  .report-section-title { color:rgba(255,255,255,0.9)!important; border-color:rgba(255,255,255,0.08)!important; font-size:14px; }
+  .report-total { font-size:12px!important; }
+
+  /* ── EMPTY STATES ── */
+  .empty { color:rgba(255,255,255,0.3)!important; padding:36px 20px; }
+  .empty-icon { font-size:32px!important; opacity:0.3!important; }
+
+  /* ── SIDEBAR OVERLAY when open ── */
+  .sidebar.open { display:flex!important; position:fixed; z-index:500; width:280px; box-shadow:0 0 0 100vw rgba(0,0,0,0.65); }
 
   /* ── TOAST ── */
-  .flujo-toast { left:12px; right:12px; bottom:88px; font-size:12px; border-radius:14px; }
+  .flujo-toast { left:10px; right:10px; bottom:88px; font-size:13px; border-radius:14px; }
 
   /* ── AUTH ── */
-  #auth-screen > div { padding:40px 22px 32px !important; }
+  #auth-screen > div { padding:40px 20px 32px!important; }
 
-  /* ── SIDEBAR cuando está abierto en móvil ── */
-  .sidebar.open {
-    display:flex !important;
-    position:fixed;
-    z-index:500;
-    width:280px;
-    box-shadow:0 0 0 100vw rgba(0,0,0,0.6);
+  /* ── PIE LEGEND on mobile ── */
+  #income-pie-legend .tx-name, #expense-pie-legend .tx-name { font-size:12px; }
+  #income-pie-legend, #expense-pie-legend { margin-top:8px; }
+
+  /* ── FX PANELS ── */
+  .pie-fx-rate-row { flex-wrap:wrap; gap:6px; padding:8px 0; }
+  #income-pie-fx, #expense-pie-fx, #cc-charge-pie-fx, #tx-pie-fx {
+    background:rgba(255,255,255,0.04)!important;
+    border-color:rgba(255,255,255,0.08)!important;
   }
 }
 /* Already-deducted badge */
