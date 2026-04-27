@@ -77,7 +77,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .sidebar-footer{margin-top:auto;padding:14px 28px;border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
 .month-selector{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.6);font-family:var(--font-num);font-size:11px;}
 .month-btn{background:none;border:none;cursor:pointer;color:var(--gold);font-size:16px;padding:0 4px;}
-.main{margin-left:252px;min-height:100vh;}
+.main{margin-left:240px;min-height:100vh;}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:50;}
 .page-title{font-family:var(--font-text);font-size:18px;font-weight:700;letter-spacing:-0.4px;color:var(--ink);}
 .page-title em{font-style:italic;color:var(--gold);}
@@ -352,6 +352,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   .topbar{padding:14px 18px 14px 62px;}
   .content{padding:16px 14px;}
   .two-col{grid-template-columns:1fr;gap:14px;}
+  .view-split-layout{grid-template-columns:1fr;}
   .stats-grid{grid-template-columns:1fr 1fr;gap:10px;}
   .accounts-grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));}
   .cc-grid{grid-template-columns:1fr;}
@@ -365,53 +366,156 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 /* ── Mobile (≤ 600px) ── */
 @media(max-width:600px){
-  #dark-toggle-btn{display:flex!important;}
-  .stats-grid{grid-template-columns:1fr;gap:8px;}
-  .topbar-right .btn-primary span{display:none;}
-  .stat-amount{font-size:20px;}
-  .transaction-item{padding:9px 12px;gap:8px;}
-  .row-actions{gap:3px;}
-  .row-actions .btn-sm{padding:4px 7px;font-size:10px;}
-  .section-header{padding:12px 14px;}
-  .tx-name{font-size:12px;}
-  .tx-meta{font-size:9px;}
-  .tx-amount{font-size:13px;}
-  .page-title{font-size:17px;}
-  .cc-stats{grid-template-columns:1fr 1fr;gap:6px;}
-  .cc-stat:last-child{grid-column:span 2;}
-  .flujo-toast{left:12px;right:12px;bottom:16px;font-size:12px;}
-  .provider-card{padding:14px;}
-  .patrimony-currencies{gap:7px;}
-  .currency-pill{padding:7px 10px;}
+  /* ── LAYOUT ── */
+  body { background:#0a0a0f; color:#e5e7eb; overflow-x:hidden; }
+  .main { margin-left:0; padding-bottom:80px; }
+  .sidebar { display:none !important; }
+  .hamburger { display:none !important; }
+  .mobile-bottom-nav { display:flex !important; }
 
-  /* ── MOBILE DARK THEME ── */
-  body{background:#0a0a0f;color:#f1f0ec;}
-  .sidebar{display:none;}
-  .main-content{margin-left:0!important;padding-top:60px;padding-bottom:80px;}
-  .topbar{background:rgba(10,10,15,0.9);border-bottom:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(20px);padding:12px 16px;position:fixed;top:0;left:0;right:0;z-index:50;}
-  .page-title{color:#fff!important;}
-  .section-card{background:rgba(20,20,32,0.95);border:1px solid rgba(255,255,255,0.07);border-radius:16px;box-shadow:none;}
-  .section-header{border-bottom:1px solid rgba(255,255,255,0.06);}
-  .section-title,.section-header *{color:rgba(255,255,255,0.9)!important;}
-  .stat-card{background:rgba(20,20,32,0.95);border:1px solid rgba(255,255,255,0.07);box-shadow:none;}
-  .stat-label{color:rgba(255,255,255,0.4)!important;}
-  .stat-amount{color:#fff!important;}
-  .stat-sub{color:rgba(255,255,255,0.35)!important;}
-  .transaction-item{border-bottom:1px solid rgba(255,255,255,0.05);}
-  .transaction-item:hover{background:rgba(255,255,255,0.03);}
-  .tx-name{color:rgba(255,255,255,0.9)!important;}
-  .tx-meta,.tx-date,.tx-created{color:rgba(255,255,255,0.35)!important;}
-  .modal{background:#12121f;border:1px solid rgba(255,255,255,0.1);}
-  .modal-title{color:#fff!important;}
-  .form-label{color:rgba(255,255,255,0.45)!important;}
-  .form-input,.form-select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#fff;}
-  .form-input:focus,.form-select:focus{border-color:var(--accent);}
-  .form-input::placeholder{color:rgba(255,255,255,0.2);}
-  .btn-cancel{border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);}
-  .btn-outline{border-color:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);}
-  .empty{color:rgba(255,255,255,0.3);}
-  .patrimony-card,.currency-pill,.stat-multi-row{background:rgba(255,255,255,0.05)!important;border-color:rgba(255,255,255,0.08)!important;color:#fff!important;}
-  .section-card .section-card{background:rgba(255,255,255,0.04)!important;}
+  /* ── TOPBAR ── */
+  .topbar {
+    background:rgba(10,10,15,0.92);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    padding:12px 16px;
+    position:fixed; top:0; left:0; right:0; z-index:100;
+  }
+  .topbar-right { gap:6px; }
+  .topbar-right .btn-outline { display:none; }
+  .topbar-right .btn-primary { padding:7px 12px; font-size:12px; }
+  .topbar-right .btn-primary span { display:none; }
+  .page-title { font-size:17px; color:#fff; }
+  .content { padding:72px 12px 16px; }
+
+  /* ── STATS GRID ── */
+  .stats-grid { grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+  .stat-card { padding:14px 14px; }
+  .stat-card.balance { grid-column:span 2; }
+  .stat-card.income  { border-left:3px solid #4ade80; }
+  .stat-card.expense { border-left:3px solid #f87171; }
+  .stat-card.balance { border-left:3px solid #818cf8; }
+  .stat-label { font-size:9px; color:rgba(255,255,255,0.4) !important; }
+  .stat-amount { font-size:18px; color:#fff !important; }
+  .stat-sub { font-size:10px; color:rgba(255,255,255,0.35) !important; }
+  .stat-amount.income  { color:#4ade80 !important; }
+  .stat-amount.expense { color:#f87171 !important; }
+  .stat-amount.balance { color:#fff !important; }
+
+  /* ── CARDS ── */
+  .section-card {
+    background:rgba(20,20,32,0.96);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:14px;
+    box-shadow:none;
+    margin-bottom:12px;
+  }
+  .section-header { padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.06); flex-wrap:wrap; gap:8px; }
+  .section-title { color:rgba(255,255,255,0.9) !important; font-size:13px; }
+  .section-header * { color:rgba(255,255,255,0.9) !important; }
+
+  /* ── LAYOUTS ── */
+  .two-col { grid-template-columns:1fr; gap:12px; }
+  .view-split-layout { grid-template-columns:1fr; }
+  .view-split-aside { display:none; } /* hide pie on mobile to save space */
+  .stats-grid #stat-tc-header { font-size:10px; }
+  .form-row { flex-direction:column; gap:0; }
+  .cc-grid { grid-template-columns:1fr; }
+  .accounts-grid { grid-template-columns:1fr !important; }
+
+  /* ── TRANSACTIONS ── */
+  .transaction-item {
+    padding:11px 14px;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+  }
+  .tx-col-right { width:130px; right:14px; }
+  .tx-name  { font-size:13px; color:rgba(255,255,255,0.9) !important; }
+  .tx-meta  { font-size:10px; color:rgba(255,255,255,0.35) !important; }
+  .tx-date  { font-size:10px; color:rgba(255,255,255,0.35) !important; }
+  .tx-amount { font-size:13px; }
+  .tx-amount.debit  { color:#f87171 !important; }
+  .tx-amount.credit { color:#4ade80 !important; }
+  .tx-icon  { width:34px; height:34px; border-radius:10px; }
+  .tx-icon.income-icon  { background:rgba(74,222,128,0.12) !important; }
+  .tx-icon.expense-icon { background:rgba(248,113,113,0.12) !important; }
+  .row-actions { opacity:1; }
+
+  /* ── MODALS ── */
+  .modal-overlay { align-items:flex-end !important; padding:0 !important; }
+  .modal {
+    background:#12121f !important;
+    border:1px solid rgba(255,255,255,0.1) !important;
+    border-radius:20px 20px 0 0 !important;
+    width:100% !important; max-width:100% !important;
+    max-height:92vh; padding:24px 20px 32px;
+  }
+  .modal-title { color:#fff !important; font-size:16px; }
+  .modal-actions { border-top-color:rgba(255,255,255,0.08) !important; padding-top:14px; }
+  .form-label { color:rgba(255,255,255,0.45) !important; }
+  .form-input,.form-select {
+    background:rgba(255,255,255,0.06) !important;
+    border:1px solid rgba(255,255,255,0.1) !important;
+    color:#fff !important;
+  }
+  .form-input::placeholder { color:rgba(255,255,255,0.2) !important; }
+  .form-input:focus,.form-select:focus { border-color:var(--accent) !important; }
+  .btn-save { background:var(--accent); }
+  .btn-cancel { border-color:rgba(255,255,255,0.1) !important; color:rgba(255,255,255,0.5) !important; }
+  .btn-outline { border-color:rgba(255,255,255,0.12) !important; color:rgba(255,255,255,0.6) !important; }
+  .tab-btn { border-color:rgba(255,255,255,0.1); color:rgba(255,255,255,0.4); }
+
+  /* ── CREDIT CARDS ── */
+  .credit-card { border-radius:16px; }
+  .cc-stats { grid-template-columns:1fr 1fr; gap:5px; }
+  .cc-stat:last-child { grid-column:span 2; }
+  .cc-section-title { color:rgba(255,255,255,0.3) !important; border-color:rgba(255,255,255,0.06) !important; }
+
+  /* ── SUMMARY STRIP ── */
+  #dash-summary-strip { gap:8px; }
+  #dash-summary-strip > div {
+    background:rgba(20,20,32,0.96) !important;
+    border-color:rgba(255,255,255,0.07) !important;
+    padding:12px 14px;
+  }
+
+  /* ── PATRIMONY ── */
+  .patrimony-card {
+    background:rgba(20,20,32,0.96) !important;
+    border-color:rgba(255,255,255,0.07) !important;
+  }
+  .patrimony-title { color:rgba(255,255,255,0.9) !important; }
+  .patrimony-currencies { gap:8px !important; flex-direction:column; }
+  .currency-pill {
+    background:rgba(255,255,255,0.05) !important;
+    border-color:rgba(255,255,255,0.08) !important;
+    padding:10px 14px !important;
+  }
+  .currency-amount { color:#fff !important; }
+  .currency-label,.currency-sub { color:rgba(255,255,255,0.4) !important; }
+
+  /* ── OTHER VIEWS ── */
+  .source-item { border-color:rgba(255,255,255,0.05) !important; padding:11px 14px; }
+  .source-name  { color:rgba(255,255,255,0.9) !important; }
+  .source-meta,.source-count { color:rgba(255,255,255,0.35) !important; }
+  .budget-item  { border-color:rgba(255,255,255,0.05) !important; padding:11px 14px; }
+  .provider-card { background:rgba(20,20,32,0.96) !important; border-color:rgba(255,255,255,0.07) !important; padding:12px 14px; }
+  .inv-card { background:rgba(20,20,32,0.96) !important; border-color:rgba(255,255,255,0.07) !important; box-shadow:none; }
+  .inv-ticker { color:#fff !important; }
+  .goal-card { background:rgba(20,20,32,0.96) !important; border-color:rgba(255,255,255,0.07) !important; box-shadow:none; }
+  .goal-name { color:#fff !important; }
+  .sub-card { background:rgba(20,20,32,0.96) !important; border-color:rgba(255,255,255,0.07) !important; box-shadow:none; }
+  .sub-name { color:rgba(255,255,255,0.9) !important; }
+  .report-card { background:rgba(20,20,32,0.96) !important; border-color:rgba(255,255,255,0.07) !important; box-shadow:none; }
+  .report-row { border-color:rgba(255,255,255,0.05) !important; }
+  .report-section-title { color:rgba(255,255,255,0.9) !important; border-color:rgba(255,255,255,0.08) !important; }
+  .empty { color:rgba(255,255,255,0.3) !important; }
+
+  /* ── TOAST ── */
+  .flujo-toast { left:12px; right:12px; bottom:90px; font-size:12px; border-radius:12px; }
+
+  /* ── AUTH SCREEN ── */
+  #auth-screen > div { padding:40px 24px 32px !important; }
 }
 /* Already-deducted badge */
 .deducted-badge{font-family:var(--font-text);font-size:9px;font-weight:600;letter-spacing:0.3px;padding:2px 8px;border-radius:5px;background:rgba(37,99,235,0.08);color:var(--blue);white-space:nowrap;}
@@ -594,37 +698,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 }
 
 /* MOBILE dashboard overrides */
-@media (max-width: 600px) {
-  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .stat-card.balance { grid-column: span 2; }
-  .stat-amount { font-size: 18px !important; }
-  .two-col { grid-template-columns: 1fr; }
-  .patrimony-currencies { gap: 8px; }
-  .currency-pill { padding: 10px 14px; }
-  .currency-amount { font-size: 16px; }
-  /* Mobile dark overrides for dashboard */
-  .stat-card { background: rgba(20,20,32,0.95) !important;
-    border-color: rgba(255,255,255,0.07) !important; }
-  .stat-card.income  { border-left-color: #4ade80; }
-  .stat-card.expense { border-left-color: #f87171; }
-  .stat-card.balance { border-left-color: #818cf8; }
-  .stat-amount.income  { color: #4ade80 !important; }
-  .stat-amount.expense { color: #f87171 !important; }
-  .stat-amount.balance { color: #fff !important; }
-  .stat-label { color: rgba(255,255,255,0.4) !important; }
-  .stat-sub { color: rgba(255,255,255,0.35) !important; }
-  .patrimony-card { background: rgba(20,20,32,0.95) !important;
-    border-color: rgba(255,255,255,0.07) !important; }
-  .patrimony-title { color: rgba(255,255,255,0.9) !important; }
-  .currency-pill { background: rgba(255,255,255,0.06) !important;
-    border-color: rgba(255,255,255,0.06) !important; }
-  .currency-amount { color: #fff !important; }
-  .currency-label, .currency-sub { color: rgba(255,255,255,0.4) !important; }
-  #dash-summary-strip > div { background: rgba(20,20,32,0.95) !important;
-    border-color: rgba(255,255,255,0.07) !important; }
-  .cat-row { border-color: rgba(255,255,255,0.05) !important; }
-  .cat-label { color: rgba(255,255,255,0.85) !important; }
-}
+
 /* ══ END DASHBOARD ═══════════════════════════════════════════════════════ */
 
 /* ══ TRANSACTIONS & MODALS — REVOLUT STYLE ═══════════════════════════════ */
@@ -710,50 +784,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .add-small:hover   { background: var(--cream); color: var(--ink); border-color: var(--muted); }
 
 /* MOBILE dark overrides — transactions & modals */
-@media (max-width: 600px) {
-  .transaction-item {
-    padding: 12px 170px 12px 14px;
-    border-bottom-color: rgba(255,255,255,0.05);
-  }
-  .transaction-item:hover { background: rgba(255,255,255,0.03); }
-  .tx-name  { color: rgba(255,255,255,0.9) !important; }
-  .tx-meta  { color: rgba(255,255,255,0.35) !important; }
-  .tx-date  { color: rgba(255,255,255,0.35) !important; }
-  .tx-created { color: rgba(255,255,255,0.25) !important; }
-  .tx-icon.income-icon  { background: rgba(74,222,128,0.12) !important; }
-  .tx-icon.expense-icon { background: rgba(248,113,113,0.12) !important; }
-  .tx-amount.pos, .tx-amount.credit { color: #4ade80 !important; }
-  .tx-amount.neg, .tx-amount.debit  { color: #f87171 !important; }
-  .modal {
-    background: #12121f !important;
-    border-color: rgba(255,255,255,0.1) !important;
-    border-radius: 20px 20px 0 0;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin-top: auto;
-    max-height: 90vh;
-  }
-  .modal-overlay {
-    align-items: flex-end !important;
-  }
-  .modal-title { color: #fff !important; }
-  .modal-actions { border-top-color: rgba(255,255,255,0.08) !important; }
-  .form-label { color: rgba(255,255,255,0.4) !important; }
-  .form-input, .form-select {
-    background: rgba(255,255,255,0.06) !important;
-    border-color: rgba(255,255,255,0.08) !important;
-    color: #fff !important;
-  }
-  .form-input::placeholder { color: rgba(255,255,255,0.2) !important; }
-  .tab-btn { border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
-  .tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .add-small { border-color: rgba(255,255,255,0.1); color: rgba(255,255,255,0.35); }
-  .modal-actions .btn-cancel {
-    border-color: rgba(255,255,255,0.1) !important;
-    color: rgba(255,255,255,0.45) !important;
-  }
-  .row-actions { opacity: 1; }
-}
+
 /* ══ END TRANSACTIONS & MODALS ════════════════════════════════════════════ */
 
 /* ══ REMAINING VIEWS — REVOLUT STYLE ════════════════════════════════════ */
@@ -836,41 +867,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   letter-spacing: -0.8px; color: var(--ink); }
 
 /* ══ MOBILE remaining dark overrides ═══════════════════════════════════== */
-@media (max-width: 600px) {
-  /* Providers */
-  .provider-card { background: rgba(20,20,32,0.95) !important;
-    border-color: rgba(255,255,255,0.07) !important; box-shadow: none; }
-  /* Sources */
-  .source-item { border-color: rgba(255,255,255,0.05) !important; }
-  .source-name  { color: rgba(255,255,255,0.9) !important; }
-  .source-meta  { color: rgba(255,255,255,0.35) !important; }
-  .source-count { color: rgba(255,255,255,0.35) !important; }
-  /* Budget */
-  .budget-item { border-color: rgba(255,255,255,0.05) !important; }
-  /* Investments */
-  .inv-card { background: rgba(20,20,32,0.95) !important;
-    border-color: rgba(255,255,255,0.07) !important; box-shadow: none; }
-  .inv-ticker { color: #fff !important; }
-  /* Goals */
-  .goal-card { background: rgba(20,20,32,0.95) !important;
-    border-color: rgba(255,255,255,0.07) !important; box-shadow: none; }
-  .goal-name { color: #fff !important; }
-  /* Subs */
-  .sub-card { background: rgba(20,20,32,0.95) !important;
-    border-color: rgba(255,255,255,0.07) !important; box-shadow: none; }
-  .sub-name { color: rgba(255,255,255,0.9) !important; }
-  /* Section titles */
-  .section-title { color: rgba(255,255,255,0.9) !important; }
-  /* Report */
-  .report-card { background: rgba(20,20,32,0.95) !important;
-    border-color: rgba(255,255,255,0.07) !important; box-shadow: none; }
-  .report-row { border-color: rgba(255,255,255,0.05) !important; }
-  .report-section-title { color: rgba(255,255,255,0.9) !important;
-    border-color: rgba(255,255,255,0.08) !important; }
-  /* CC bar */
-  .cc-section-title { color: rgba(255,255,255,0.35) !important;
-    border-color: rgba(255,255,255,0.06) !important; }
-}
+
 /* ══ END REMAINING VIEWS ══════════════════════════════════════════════════ */
 
 /* ══ AUTH SCREEN — REVOLUT STYLE ════════════════════════════════════════ */
@@ -993,6 +990,74 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 }
 
 /* ══ END AUTH SCREEN ══════════════════════════════════════════════════════ */
+
+/* ══ MOBILE BOTTOM NAV ═══════════════════════════════════════════════════ */
+.mobile-bottom-nav {
+  display: none; /* hidden on desktop */
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 68px;
+  background: rgba(10,10,15,0.96);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 100;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.mob-nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 4px;
+  border-radius: 12px;
+  transition: background 0.15s;
+  min-width: 0;
+}
+.mob-nav-btn:active { background: rgba(255,255,255,0.08); }
+.mob-nav-icon {
+  font-size: 18px;
+  line-height: 1;
+  color: rgba(255,255,255,0.35);
+  transition: color 0.15s;
+}
+.mob-nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.35);
+  font-family: var(--font-text);
+  letter-spacing: 0.2px;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+.mob-nav-btn.active .mob-nav-icon,
+.mob-nav-btn.active .mob-nav-label {
+  color: var(--accent);
+}
+.mob-nav-add {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  background: var(--accent) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 4px 16px rgba(99,102,241,0.4);
+  margin: 0 8px;
+}
+.mob-nav-add .mob-nav-icon {
+  color: #fff !important;
+  font-size: 26px !important;
+  font-weight: 300 !important;
+  line-height: 1 !important;
+}
+/* ══ END MOBILE BOTTOM NAV ══════════════════════════════════════════════ */
 </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -6808,6 +6873,26 @@ function exportReportPDF(){
 .subs-status-stripe{position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px;}
 </style>
   </head><body>${html}
+
+<!-- ── MOBILE BOTTOM NAV (Revolut style) ── -->
+<nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+  <button class="mob-nav-btn active" id="mob-nav-dashboard"   onclick="showView('dashboard');setMobNav(this)">
+    <span class="mob-nav-icon">◈</span><span class="mob-nav-label">Inicio</span>
+  </button>
+  <button class="mob-nav-btn" id="mob-nav-transactions" onclick="showView('transactions');setMobNav(this)">
+    <span class="mob-nav-icon">⇄</span><span class="mob-nav-label">Movimientos</span>
+  </button>
+  <button class="mob-nav-btn mob-nav-add" onclick="openTxModal('expense')">
+    <span class="mob-nav-icon" style="font-size:22px;font-weight:300;">+</span>
+  </button>
+  <button class="mob-nav-btn" id="mob-nav-accounts" onclick="showView('accounts');setMobNav(this)">
+    <span class="mob-nav-icon">🏦</span><span class="mob-nav-label">Cuentas</span>
+  </button>
+  <button class="mob-nav-btn" id="mob-nav-budget" onclick="showView('budget');setMobNav(this)">
+    <span class="mob-nav-icon">▦</span><span class="mob-nav-label">Más</span>
+  </button>
+</nav>
+
 </body></html>`);
 
   printWin.document.close();
@@ -8722,6 +8807,15 @@ function deleteCustomCat(name, type) {
   saveData(data);
   _renderCustomCatsList(data);
   flujoToast(`Categoría "${name}" eliminada`);
+}
+
+
+// ════════════════════════════════════════
+// MOBILE BOTTOM NAV
+// ════════════════════════════════════════
+function setMobNav(btn) {
+  document.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
 }
 
 
