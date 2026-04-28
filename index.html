@@ -8732,13 +8732,27 @@ function renderDashSummary(data, expTxs) {
     return;
   }
 
-  // Build spent by category+currency (use account currency, same as budget definition)
+  // Build spent by category+currency
+  // Include ALL expense types: regular expenses + credit card charges (type=credit_payment uses creditAccountId currency)
+  const allExpForBudget = (window._cachedTxs || expTxs).filter(t => {
+    if (!t.date) return false;
+    const d = new Date(t.date + 'T12:00:00');
+    const now = currentDate || new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+      && (t.type === 'expense' || t.type === 'credit_payment');
+  });
   const cs = {};
-  expTxs.forEach(t => {
-    const c = (data.accounts.find(a => a.id === t.accountId)?.currency) || 'MXN';
-    const a = t.amount || 0;
-    if (!cs[t.category]) cs[t.category] = {};
-    cs[t.category][c] = (cs[t.category][c] || 0) + a;
+  allExpForBudget.forEach(t => {
+    const cat = t.category || 'Sin categoría';
+    // For credit_payment use the credit account currency; for expense use account currency
+    const acc = data.accounts.find(a => a.id === (t.creditAccountId || t.accountId));
+    const c = acc?.currency || 'MXN';
+    // Use spendAmount (original currency) if it's an FX transaction
+    const useFX = t.isFX && t.spendCurrency && t.spendAmount;
+    const finalCurr = useFX ? t.spendCurrency : c;
+    const finalAmt  = useFX ? t.spendAmount   : (t.amount || 0);
+    if (!cs[cat]) cs[cat] = {};
+    cs[cat][finalCurr] = (cs[cat][finalCurr] || 0) + finalAmt;
   });
 
   // Calculate each budget in ITS OWN CURRENCY — never mix currencies without explicit TC
