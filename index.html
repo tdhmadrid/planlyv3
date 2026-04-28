@@ -3017,6 +3017,24 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 
 
+
+<!-- ── BUDGET DETAIL MODAL ── -->
+<div class="modal-overlay" id="budget-detail-overlay" onclick="if(event.target===this)closeBudgetDetail()">
+  <div class="modal" style="max-width:600px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div class="modal-title" id="budget-detail-title" style="margin-bottom:4px;">Categoría</div>
+        <div id="budget-detail-meta" style="font-size:12px;color:var(--sub);font-family:var(--font-text);"></div>
+      </div>
+      <button onclick="closeBudgetDetail()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--sub);padding:4px 8px;">✕</button>
+    </div>
+    <div id="budget-detail-summary" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;"></div>
+    <div style="background:var(--border);border-radius:99px;height:6px;overflow:hidden;margin-bottom:20px;">
+      <div id="budget-detail-bar" style="height:100%;border-radius:99px;transition:width .4s ease;background:var(--green);width:0%;"></div>
+    </div>
+    <div id="budget-detail-list" style="max-height:420px;overflow-y:auto;border-radius:var(--r-md);border:0.5px solid var(--border);"></div>
+  </div>
+</div>
 <script>
 
 // ════════════════════════════════════════
@@ -6783,6 +6801,7 @@ function buildReportHTML({ data, txs, rangeLabel }){
   const showInversiones= chk('rpt-inversiones');
 
   const rptTarget = document.getElementById('rpt-target-curr')?.value || '';
+  const priCurr = getPrimaryCurrency(data);
 
   const incTxs = txs.filter(t=>t.type==='income');
   const expTxs = txs.filter(t=>t.type==='expense');
@@ -7098,6 +7117,8 @@ function exportReportPDF(){
 </style>
   </head><body>${html}
 
+
+<!-- ── MOBILE BOTTOM NAV ── -->
 <!-- ── MOBILE BOTTOM NAV (Revolut style) ── -->
 <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
   <button class="mob-nav-btn active" id="mob-nav-dashboard"   onclick="showView('dashboard');setMobNav(this)">
@@ -7117,27 +7138,6 @@ function exportReportPDF(){
   </button>
 </nav>
 
-
-<!-- ── BUDGET DETAIL MODAL ── -->
-<div class="modal-overlay" id="budget-detail-overlay" onclick="if(event.target===this)closeBudgetDetail()">
-  <div class="modal" style="max-width:600px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <div>
-        <div class="modal-title" id="budget-detail-title" style="margin-bottom:4px;">Categoría</div>
-        <div id="budget-detail-meta" style="font-size:12px;color:var(--sub);font-family:var(--font-text);"></div>
-      </div>
-      <button onclick="closeBudgetDetail()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--sub);padding:4px 8px;">✕</button>
-    </div>
-    <!-- Summary bar -->
-    <div id="budget-detail-summary" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;"></div>
-    <!-- Progress bar -->
-    <div style="background:var(--border);border-radius:99px;height:6px;overflow:hidden;margin-bottom:20px;">
-      <div id="budget-detail-bar" style="height:100%;border-radius:99px;transition:width .4s ease;background:var(--green);width:0%;"></div>
-    </div>
-    <!-- Transaction list -->
-    <div id="budget-detail-list" style="max-height:420px;overflow-y:auto;border-radius:var(--r-md);border:0.5px solid var(--border);"></div>
-  </div>
-</div>
 
 </body></html>`);
 
