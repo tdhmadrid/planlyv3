@@ -8732,7 +8732,7 @@ function renderDashSummary(data, expTxs) {
     return;
   }
 
-  // Build spent by category+currency
+  // Build spent by category+currency (use account currency, same as budget definition)
   const cs = {};
   expTxs.forEach(t => {
     const c = (data.accounts.find(a => a.id === t.accountId)?.currency) || 'MXN';
@@ -8741,28 +8741,45 @@ function renderDashSummary(data, expTxs) {
     cs[t.category][c] = (cs[t.category][c] || 0) + a;
   });
 
-  // Use stat-fx-target to consolidate if available, else use budget's own currency
-  const priCurr = statTarget || getPrimaryCurrency(data);
-  let totalLimit = 0, totalSpent = 0;
+  // Calculate each budget in ITS OWN CURRENCY — never mix currencies without explicit TC
+  // If statTarget is set AND we have TCs, consolidate; otherwise keep per-budget-currency
+  let totalLimitNorm = 0, totalSpentNorm = 0;
+  let consolidateCurr = null;
+  let canConsolidate = false;
+
+  if (statTarget) {
+    // Check if we have TCs for all budget currencies
+    const budgetCurrs = [...new Set(budgets.map(b => b.currency || 'MXN'))];
+    canConsolidate = budgetCurrs.every(c => c === statTarget || _dashConvert(1, c) !== null);
+    if (canConsolidate) consolidateCurr = statTarget;
+  }
+
   budgets.forEach(b => {
-    const curr  = b.currency || 'MXN';
-    const spentRaw = Object.entries(cs[b.category] || {}).reduce((s,[c,v]) => {
-      if (c === priCurr) return s + v;
-      const conv = _dashConvert(v, c);
-      return s + (conv !== null ? conv : v);
-    }, 0);
-    const limitConv = curr === priCurr ? b.limit : (_dashConvert(b.limit, curr) ?? b.limit);
-    totalLimit += limitConv;
-    totalSpent += spentRaw;
+    const bCurr = b.currency || 'MXN';
+    // Spent: only count transactions in budget's own currency
+    const spentInBudgetCurr = (cs[b.category] || {})[bCurr] || 0;
+    const limit = b.limit || 0;
+
+    if (canConsolidate && consolidateCurr) {
+      const spentConv = bCurr === consolidateCurr ? spentInBudgetCurr : (_dashConvert(spentInBudgetCurr, bCurr) ?? spentInBudgetCurr);
+      const limitConv = bCurr === consolidateCurr ? limit : (_dashConvert(limit, bCurr) ?? limit);
+      totalSpentNorm += spentConv;
+      totalLimitNorm += limitConv;
+    } else {
+      // No TC — compare each budget as ratio and average
+      totalSpentNorm += spentInBudgetCurr;
+      totalLimitNorm += limit;
+    }
   });
 
-  const pct      = totalLimit > 0 ? Math.round((totalSpent / totalLimit) * 100) : 0;
+  const pct      = totalLimitNorm > 0 ? Math.round((totalSpentNorm / totalLimitNorm) * 100) : 0;
   const barColor = pct >= 90 ? 'var(--red)' : pct >= 70 ? 'var(--gold)' : 'var(--green)';
+  const dispCurr = consolidateCurr || (budgets[0]?.currency || 'MXN');
 
   if (pctEl)   { pctEl.textContent = pct + '%'; pctEl.style.color = barColor; }
   if (barEl)   { barEl.style.width = Math.min(pct,100) + '%'; barEl.style.background = barColor; }
-  if (spentEl) { spentEl.textContent = fmt(totalSpent, priCurr); spentEl.style.color = barColor; }
-  if (limitEl) { limitEl.textContent = '/ ' + fmt(totalLimit, priCurr); }
+  if (spentEl) { spentEl.textContent = fmt(totalSpentNorm, dispCurr); spentEl.style.color = barColor; }
+  if (limitEl) { limitEl.textContent = '/ ' + fmt(totalLimitNorm, dispCurr); }
 }
 
 
