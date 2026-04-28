@@ -1298,6 +1298,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <!-- Presupuesto — solo porcentaje -->
         <div onclick="showView('budget')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 14px rgba(0,0,0,0.07)'" onmouseout="this.style.boxShadow=''">
           <span style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Presupuesto del mes</span>
+          <div style="display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;">
+            <div id="dash-budget-spent" style="font-family:var(--font-num);font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-0.5px;">—</div>
+            <div id="dash-budget-limit" style="font-family:var(--font-num);font-size:12px;color:var(--muted);letter-spacing:-0.3px;"></div>
+          </div>
           <div id="dash-budget-pct" style="font-family:var(--font-text);font-size:22px;font-weight:700;line-height:1;color:var(--ink);">—</div>
           <div style="background:var(--cream);border-radius:99px;height:4px;overflow:hidden;">
             <div id="dash-budget-bar" style="height:100%;border-radius:99px;width:0%;transition:width .6s ease;background:var(--green);"></div>
@@ -8639,6 +8643,10 @@ function refreshStatCards() {
   const incByCurr = window._statIncByCurr || {};
   const expByCurr = window._statExpByCurr || {};
   renderStatCards(incByCurr, expByCurr);
+  // Re-render subs + budget with new currency
+  const _rd = loadData();
+  const _rExp = (window._cachedTxs||[]).filter(t=>t.type==='expense'||t.type==='credit_payment');
+  renderDashSummary(_rd, _rExp);
 }
 
 
@@ -8646,23 +8654,48 @@ function refreshStatCards() {
 // DASHBOARD SUMMARY STRIP
 // ════════════════════════════════════════
 function renderDashSummary(data, expTxs) {
-  // ── Suscripciones: solo monto mensual ──
+  // ── Leer moneda y TC del selector VER EN del resumen ──────────────────
+  const statTarget = document.getElementById('stat-fx-target')?.value || '';
+  const _dashConvert = (amount, fromCurr) => {
+    if (!statTarget || fromCurr === statTarget) return amount;
+    // Try direct rate
+    const rate = (window._statRates||{})[fromCurr+'→'+statTarget];
+    if (rate) return amount * rate;
+    // Try inverse
+    const inv = (window._statRates||{})[statTarget+'→'+fromCurr];
+    if (inv) return amount / inv;
+    return null; // no TC available
+  };
+
+  // ── Suscripciones: consolidar en moneda del VER EN ───────────────────
   const subs   = data.subscriptions || [];
   const active = subs.filter(s => s.status === 'active' || s.status === 'trial');
-
   const amtEl  = document.getElementById('dash-subs-amount');
   const warnEl = document.getElementById('dash-subs-warning');
 
   if (active.length && amtEl) {
-    // Total mensual por moneda
     const byC = {};
     active.forEach(s => {
       const c = s.currency || 'MXN';
       byC[c] = (byC[c] || 0) + subsMonthlyEquiv(s.amount, s.freq);
     });
-    amtEl.innerHTML = Object.entries(byC)
-      .map(([c,v]) => `<span style="display:block;">${fmt(v,c)}<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);font-weight:400;">/mes</span></span>`)
-      .join('');
+
+    if (statTarget && Object.keys(byC).some(c => c !== statTarget)) {
+      // Try to consolidate into target currency
+      let total = 0, allOk = true;
+      Object.entries(byC).forEach(([c,v]) => {
+        const conv = _dashConvert(v, c);
+        if (conv === null) { allOk = false; total += v; }
+        else total += conv;
+      });
+      const approx = allOk ? '' : '≈ ';
+      amtEl.innerHTML = `<span style="display:block;">${approx}${fmt(total, statTarget)}<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);font-weight:400;">/mes</span></span>`;
+    } else {
+      // Show per-currency
+      amtEl.innerHTML = Object.entries(byC)
+        .map(([c,v]) => `<span style="display:block;">${fmt(v,c)}<span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);font-weight:400;">/mes</span></span>`)
+        .join('');
+    }
   } else if (amtEl) {
     amtEl.innerHTML = '<span style="font-size:13px;color:var(--muted);">Sin suscripciones</span>';
   }
@@ -8684,38 +8717,52 @@ function renderDashSummary(data, expTxs) {
     }
   }
 
-  // ── Presupuesto: solo porcentaje ────────
+  // ── Presupuesto: mostrar gastado / límite + porcentaje ────────────────
   const budgets = data.budgets || [];
   const pctEl   = document.getElementById('dash-budget-pct');
   const barEl   = document.getElementById('dash-budget-bar');
+  const spentEl = document.getElementById('dash-budget-spent');
+  const limitEl = document.getElementById('dash-budget-limit');
 
   if (!budgets.length) {
-    if (pctEl) { pctEl.textContent = '—'; pctEl.style.color = 'var(--muted)'; }
-    if (barEl) barEl.style.width = '0%';
+    if (pctEl)   { pctEl.textContent = '—'; pctEl.style.color = 'var(--muted)'; }
+    if (barEl)   barEl.style.width = '0%';
+    if (spentEl) spentEl.textContent = '';
+    if (limitEl) limitEl.textContent = '';
     return;
   }
 
+  // Build spent by category+currency
   const cs = {};
   expTxs.forEach(t => {
-    const c = getTxDisplayCurrency(t, data);
-    const a = getTxDisplayAmount(t);
+    const c = (data.accounts.find(a => a.id === t.accountId)?.currency) || 'MXN';
+    const a = t.amount || 0;
     if (!cs[t.category]) cs[t.category] = {};
     cs[t.category][c] = (cs[t.category][c] || 0) + a;
   });
 
+  // Use stat-fx-target to consolidate if available, else use budget's own currency
+  const priCurr = statTarget || getPrimaryCurrency(data);
   let totalLimit = 0, totalSpent = 0;
   budgets.forEach(b => {
     const curr  = b.currency || 'MXN';
-    const spent = (cs[b.category] || {})[curr] || 0;
-    totalLimit += b.limit;
-    totalSpent += spent;
+    const spentRaw = Object.entries(cs[b.category] || {}).reduce((s,[c,v]) => {
+      if (c === priCurr) return s + v;
+      const conv = _dashConvert(v, c);
+      return s + (conv !== null ? conv : v);
+    }, 0);
+    const limitConv = curr === priCurr ? b.limit : (_dashConvert(b.limit, curr) ?? b.limit);
+    totalLimit += limitConv;
+    totalSpent += spentRaw;
   });
 
-  const pct       = totalLimit > 0 ? Math.round((totalSpent / totalLimit) * 100) : 0;
-  const barColor  = pct >= 90 ? 'var(--red)' : pct >= 70 ? 'var(--gold)' : 'var(--green)';
+  const pct      = totalLimit > 0 ? Math.round((totalSpent / totalLimit) * 100) : 0;
+  const barColor = pct >= 90 ? 'var(--red)' : pct >= 70 ? 'var(--gold)' : 'var(--green)';
 
-  if (pctEl) { pctEl.textContent = pct + '%'; pctEl.style.color = barColor; }
-  if (barEl) { barEl.style.width = Math.min(pct,100) + '%'; barEl.style.background = barColor; }
+  if (pctEl)   { pctEl.textContent = pct + '%'; pctEl.style.color = barColor; }
+  if (barEl)   { barEl.style.width = Math.min(pct,100) + '%'; barEl.style.background = barColor; }
+  if (spentEl) { spentEl.textContent = fmt(totalSpent, priCurr); spentEl.style.color = barColor; }
+  if (limitEl) { limitEl.textContent = '/ ' + fmt(totalLimit, priCurr); }
 }
 
 
