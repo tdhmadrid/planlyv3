@@ -4060,13 +4060,18 @@ function renderBudgets(data,expenses){
     el.innerHTML='<div class="empty"><div class="empty-icon">▦</div><p>Sin presupuestos — crea uno con el botón +</p></div>';
     return;
   }
+  // Build spend per [category][currency] — use spendCurrency/spendAmount for FX txs
   const cs={};
   expenses.forEach(t=>{
     const acc=data.accounts.find(a=>a.id===t.accountId);
-    const c=acc?.currency||'MXN';
-    const a=t.amount||0;
-    if(!cs[t.category])cs[t.category]={};
-    cs[t.category][c]=(cs[t.category][c]||0)+a;
+    const accCurr=acc?.currency||'MXN';
+    // If FX transaction, the real spend currency is spendCurrency
+    const useFX=t.isFX&&t.spendCurrency&&t.spendAmount;
+    const finalCurr=useFX?t.spendCurrency:accCurr;
+    const finalAmt=useFX?t.spendAmount:(t.amount||0);
+    const cat=t.category||'Sin categoría';
+    if(!cs[cat])cs[cat]={};
+    cs[cat][finalCurr]=(cs[cat][finalCurr]||0)+finalAmt;
   });
   el.innerHTML=data.budgets.map(b=>{
     const curr=b.currency||'MXN';
