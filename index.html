@@ -2888,18 +2888,13 @@ function _clearCache(){
   try{ localStorage.removeItem(_CACHE_KEY); }catch(e){}
 }
 // ── Datos ──────────────────────────────────────────
-let _dataCache=null, _dataCacheVersion=0;
 function loadData(){
-  // Return cached reference if data hasn't changed
-  if(_dataCache&&_dataCacheVersion===_memVersion) return _dataCache;
-  _dataCache=Object.assign({},_DATA_DEF,_memData||{});
-  _dataCacheVersion=_memVersion||0;
-  return _dataCache;
+  return Object.assign({},_DATA_DEF,_memData||{});
 }
 // ── Sync: guarda localmente INMEDIATO, sube a Supabase con debounce 1.5s ──
 let _pendingSave = null;
 function saveData(d){
-  _memData = d; _memVersion++; _dataCache=null;
+  _memData = d;
   _saveCache(d);                          // localStorage: instantáneo
   _setSyncStatus('● local','rgba(201,168,76,0.5)');
   _pendingSave = d;
