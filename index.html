@@ -965,7 +965,7 @@ canvas { will-change:auto; }
     <div style="display:flex;align-items:center;gap:10px;">
       <div style="width:32px;height:32px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;font-family:var(--font-text);flex-shrink:0;">F</div>
       <div>
-        <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.3px;line-height:1;">Flujo</div>
+        <div style="display:flex;align-items:center;gap:7px;"><span style="font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.3px;line-height:1;">Flujo</span><span style="font-size:9px;font-weight:700;color:rgba(99,102,241,0.85);background:rgba(99,102,241,0.18);padding:2px 7px;border-radius:5px;letter-spacing:0.5px;font-family:var(--font-num);">V3.01</span></div>
         <div style="font-size:10px;color:rgba(255,255,255,0.35);font-weight:400;letter-spacing:0.3px;margin-top:1px;">Finanzas Personales</div>
       </div>
     </div>
@@ -4056,41 +4056,53 @@ function renderUpcomingCharges(data){
 // ════════════════════════════════════════
 function renderBudgets(data,expenses){
   const el=document.getElementById('budget-list');
-  if(!data.budgets.length){el.innerHTML='<div class="empty"><div class="empty-icon">▦</div><p>No hay presupuestos</p></div>';return;}
-  // Build spend totals per [category][currency]
+  if(!data.budgets.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">▦</div><p>Sin presupuestos — crea uno con el botón +</p></div>';
+    return;
+  }
   const cs={};
   expenses.forEach(t=>{
-    const c=getTxDisplayCurrency(t,data);
-    const a=getTxDisplayAmount(t);
+    const acc=data.accounts.find(a=>a.id===t.accountId);
+    const c=acc?.currency||'MXN';
+    const a=t.amount||0;
     if(!cs[t.category])cs[t.category]={};
     cs[t.category][c]=(cs[t.category][c]||0)+a;
   });
   el.innerHTML=data.budgets.map(b=>{
     const curr=b.currency||'MXN';
-    // spent in the budget's currency for this category
     const spent=(cs[b.category]||{})[curr]||0;
-    const pct=Math.min(Math.round((spent/b.limit)*100),100);
-    const cls=pct>=90?'progress-danger':pct>=70?'progress-warning':'progress-ok';
-    const bc=pct>=90?'badge-red':pct>=70?'':'badge-green';
-    const bs=pct>=70&&pct<90?'background:rgba(230,126,34,0.12);color:#e67e22':'';
-    // show all spend currencies for this category as info
-    const otherCurrs=Object.entries(cs[b.category]||{}).filter(([c])=>c!==curr).map(([c,a])=>`<span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;">${fmt(a,c)}</span>`).join(' ');
-    return `<div class="budget-item ${cls}" onclick="openBudgetDetail('${b.id}')" style="cursor:pointer;" onmouseover="this.style.boxShadow='var(--shadow-md)'" onmouseout="this.style.boxShadow=''">
-      <div class="budget-header">
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <div class="budget-name">${catEmoji(b.category)} ${b.category}</div>
-          <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);background:var(--cream);padding:2px 6px;border-radius:99px;">${curr}</span>
-          ${otherCurrs?`<span style="font-size:9px;color:var(--muted);">+ ${otherCurrs} otras monedas</span>`:''}
-          ${b.notes?`<span style="font-size:10px;color:var(--muted);">· ${b.notes}</span>`:''}
+    const pct=b.limit>0?Math.min(Math.round((spent/b.limit)*100),100):0;
+    const remaining=Math.max(0,b.limit-spent);
+    const over=spent>b.limit;
+    const barColor=pct>=90?'#f87171':pct>=70?'#f59e0b':'#4ade80';
+    const textColor=pct>=90?'var(--red)':pct>=70?'#f59e0b':'var(--green)';
+    const bgColor=pct>=90?'rgba(248,113,113,0.06)':pct>=70?'rgba(245,158,11,0.06)':'rgba(74,222,128,0.04)';
+    const borderColor=pct>=90?'rgba(248,113,113,0.2)':pct>=70?'rgba(245,158,11,0.2)':'rgba(74,222,128,0.15)';
+    return `<div onclick="openBudgetDetail('${b.id}')" style="cursor:pointer;padding:16px 20px;border-bottom:0.5px solid var(--border);transition:background 0.15s;" onmouseover="this.style.background='var(--paper)'" onmouseout="this.style.background=''">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+          <div style="width:36px;height:36px;border-radius:10px;background:${bgColor};border:1px solid ${borderColor};display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">${catEmoji(b.category)}</div>
+          <div style="min-width:0;">
+            <div style="font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.category}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:1px;font-family:var(--font-num);">${curr}</div>
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="budget-amounts">${fmt(spent,curr)} / ${fmt(b.limit,curr)}</div>
-          <span class="badge ${bc}" style="${bs}">${pct}%</span>
-          <button class="btn-sm btn-edit" onclick="event.stopPropagation();editBudget('${b.id}')">✎</button>
-          <button class="btn-sm btn-del" onclick="event.stopPropagation();deleteBudget('${b.id}')">✕</button>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:var(--font-num);font-size:16px;font-weight:700;color:${textColor};letter-spacing:-0.5px;">${fmt(spent,curr)}</div>
+          <div style="font-size:11px;color:var(--sub);font-family:var(--font-num);">/ ${fmt(b.limit,curr)}</div>
         </div>
       </div>
-      <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:${pct}%"></div></div>
+      <div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden;margin-bottom:8px;">
+        <div style="height:100%;border-radius:99px;width:${pct}%;background:${barColor};transition:width 0.6s cubic-bezier(.4,0,.2,1);"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;font-weight:700;color:${textColor};font-family:var(--font-num);">${pct}%</span>
+        <span style="font-size:11px;color:var(--sub);font-family:var(--font-num);">${over?'<span style="color:var(--red);">⚠ '+fmt(spent-b.limit,curr)+' sobre el límite</span>':'Disponible: '+fmt(remaining,curr)}</span>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:4px;margin-top:6px;">
+        <button class="btn-sm btn-edit" onclick="event.stopPropagation();editBudget('${b.id}')">✎</button>
+        <button class="btn-sm btn-del" onclick="event.stopPropagation();deleteBudget('${b.id}')">✕</button>
+      </div>
     </div>`;
   }).join('');
 }
