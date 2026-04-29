@@ -53,7 +53,7 @@ body{font-family:var(--font-text);background:var(--paper);color:var(--ink);min-h
 .page-title em{font-style:italic;color:var(--accent);}
 .content{padding:26px 34px;}
 .hamburger{display:none;position:fixed;top:14px;left:14px;z-index:300;background:var(--ink);border:none;border-radius:8px;width:38px;height:38px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
-.hamburger span{display:block;width:18px;height:2px;background:var(--gold);border-radius:2px;transition:all 0.3s;}
+.hamburger span{display:block;width:18px;height:2px;background:var(--gold);border-radius:2px;transition:background 0.3s,color 0.3s,border-color 0.3s;}
 .two-col{display:grid;grid-template-columns:1fr 300px;gap:14px;margin-bottom:14px;}
 .view{display:none;}.view.active{display:block;}
 
@@ -76,7 +76,7 @@ body{font-family:var(--font-text);background:var(--paper);color:var(--ink);min-h
 .btn-sm{padding:4px 10px;font-size:11px;border-radius:6px;border:none;cursor:pointer;font-family:var(--font-text);font-weight:500;transition:background 0.1s;display:inline-flex;align-items:center;gap:4px;}
 .btn-sm.btn-edit{background:rgba(37,99,235,0.1);color:var(--blue);}
 .btn-sm.btn-del{background:rgba(220,38,38,0.08);color:var(--red);}
-.btn-confirm{padding:4px 10px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--sub);transition:all 0.15s;}
+.btn-confirm{padding:4px 10px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--sub);transition:background 0.15s,color 0.15s,border-color 0.15s;}
 .btn-confirm.confirmed{background:rgba(22,163,74,0.1);color:var(--green);border-color:rgba(22,163,74,0.3);}
 
 /* ── FORMS ── */
@@ -87,7 +87,7 @@ body{font-family:var(--font-text);background:var(--paper);color:var(--ink);min-h
 .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,0.12);}
 .form-input::placeholder{color:var(--muted);}
 .form-select{width:100%;padding:9px 12px;border-radius:var(--r-sm);border:0.5px solid var(--border);background:var(--cream);color:var(--ink);font-size:13px;font-family:var(--font-text);cursor:pointer;outline:none;transition:border-color 0.15s;}
-.type-btn{flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:none;cursor:pointer;font-family:var(--font-text);font-size:13px;font-weight:500;color:var(--sub);transition:all 0.15s;}
+.type-btn{flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:none;cursor:pointer;font-family:var(--font-text);font-size:13px;font-weight:500;color:var(--sub);transition:background 0.15s,color 0.15s,border-color 0.15s;}
 .type-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 
 /* ── STAT CARDS ── */
@@ -152,14 +152,14 @@ body{font-family:var(--font-text);background:var(--paper);color:var(--ink);min-h
 .fx-badge.applied{background:var(--green-light);color:var(--green);border-color:transparent;}
 
 /* ── MODALS ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.18s;backdrop-filter:blur(8px);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.18s;}
 .modal-overlay.open{opacity:1;pointer-events:auto;}
 .modal{background:var(--card);border-radius:var(--r-xl);width:520px;max-width:96vw;max-height:92vh;overflow-y:auto;padding:28px;transform:translateY(12px);transition:transform 0.18s;border:0.5px solid var(--border);box-shadow:var(--shadow-md);}
 .modal::-webkit-scrollbar{width:4px;}.modal::-webkit-scrollbar-track{background:transparent;}.modal::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 .modal-wide{width:650px;}
 .modal-title{font-family:var(--font-text);font-size:17px;font-weight:700;margin-bottom:20px;letter-spacing:-0.3px;color:var(--ink);}
 .modal-actions{display:flex;gap:8px;margin-top:22px;padding-top:16px;border-top:0.5px solid var(--border);}
-.modal-tab{flex:1;padding:7px;border-radius:8px;border:none;background:none;cursor:pointer;font-family:var(--font-text);font-size:13px;font-weight:500;color:var(--sub);transition:all 0.15s;}
+.modal-tab{flex:1;padding:7px;border-radius:8px;border:none;background:none;cursor:pointer;font-family:var(--font-text);font-size:13px;font-weight:500;color:var(--sub);transition:background 0.15s,color 0.15s,border-color 0.15s;}
 .modal-tab.active{background:var(--accent);color:#fff;}
 .tab-btn{flex:1;padding:8px 12px;border-radius:var(--r-sm);border:0.5px solid var(--border);background:none;font-family:var(--font-text);font-size:12px;font-weight:600;cursor:pointer;transition:background 0.15s,color 0.15s,border-color 0.15s;color:var(--sub);}
 .tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
@@ -260,7 +260,7 @@ body{font-family:var(--font-text);background:var(--paper);color:var(--ink);min-h
 .view-split-aside{margin-bottom:0!important;padding:18px!important;}
 
 /* ── THEME CARDS ── */
-.theme-card{cursor:pointer;border:2px solid var(--border);border-radius:11px;overflow:hidden;transition:all 0.2s;}
+.theme-card{cursor:pointer;border:2px solid var(--border);border-radius:11px;overflow:hidden;transition:background 0.2s,color 0.2s,border-color 0.2s;}
 .theme-card:hover,.theme-card.active{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.1);}
 
 /* ── MOBILE NAV ── */
@@ -277,7 +277,7 @@ body{font-family:var(--font-text);background:var(--paper);color:var(--ink);min-h
 
 
 /* ── TOAST ── */
-.flujo-toast{position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:var(--r-md);font-family:var(--font-text);font-size:13px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,0.2);pointer-events:none;animation:toastIn 0.2s ease;backdrop-filter:blur(8px);}
+.flujo-toast{position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:var(--r-md);font-family:var(--font-text);font-size:13px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,0.2);pointer-events:none;animation:toastIn 0.2s ease;}
 @keyframes toastIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 
 /* ── AUTH ── */
@@ -296,7 +296,7 @@ body{font-family:var(--font-text);background:var(--paper);color:var(--ink);min-h
 .period-bar{height:20px;border-radius:4px;background:var(--accent);opacity:0.7;transition:width .3s;}
 #fx-result{font-family:var(--font-num);font-size:20px;font-weight:700;letter-spacing:-0.8px;color:var(--ink);}
 #accdet-header{transition:background 0.3s;}
-.add-section-btn{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--r-sm);border:0.5px dashed var(--border);background:none;color:var(--sub);font-family:var(--font-text);font-size:12px;cursor:pointer;width:100%;transition:all 0.15s;}
+.add-section-btn{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:var(--r-sm);border:0.5px dashed var(--border);background:none;color:var(--sub);font-family:var(--font-text);font-size:12px;cursor:pointer;width:100%;transition:background 0.15s,color 0.15s,border-color 0.15s;}
 .add-section-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
 
 /* ── PRINT ── */
@@ -495,10 +495,10 @@ body{font-family:var(--font-text);background:var(--paper);color:var(--ink);min-h
 /* ── Investments ── */
 .inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
 .inv-tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px;}
-.inv-tab{padding:6px 14px;border-radius:var(--r-sm);border:none;background:none;cursor:pointer;font-family:var(--font-text);font-size:12px;font-weight:600;color:var(--sub);transition:all 0.15s;}
+.inv-tab{padding:6px 14px;border-radius:var(--r-sm);border:none;background:none;cursor:pointer;font-family:var(--font-text);font-size:12px;font-weight:600;color:var(--sub);transition:background 0.15s,color 0.15s,border-color 0.15s;}
 .inv-tab.active{background:var(--accent);color:#fff;}
 .inv-type-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
-.inv-type-btn{padding:6px 14px;border-radius:var(--r-sm);border:0.5px solid var(--border);background:none;cursor:pointer;font-family:var(--font-text);font-size:12px;font-weight:500;color:var(--sub);transition:all 0.15s;}
+.inv-type-btn{padding:6px 14px;border-radius:var(--r-sm);border:0.5px solid var(--border);background:none;cursor:pointer;font-family:var(--font-text);font-size:12px;font-weight:500;color:var(--sub);transition:background 0.15s,color 0.15s,border-color 0.15s;}
 .inv-type-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
 .inv-summary-bar{display:flex;gap:10px;flex-wrap:wrap;padding:14px 18px;border-bottom:0.5px solid var(--border);background:var(--paper);}
 .inv-summary-item{display:flex;flex-direction:column;gap:2px;}
@@ -509,6 +509,15 @@ body{font-family:var(--font-text);background:var(--paper);color:var(--ink);min-h
 .category-breakdown{padding:14px 18px;}
 
 /* ══ END RECOVERED CLASSES ════════════════════════════════════════════════ */
+
+/* ── Performance: GPU-friendly hover ── */
+.hover-lift{transition:box-shadow 0.15s;}
+.hover-lift:hover{box-shadow:0 4px 14px rgba(0,0,0,0.07);}
+
+/* ── Reduce motion for users who prefer it ── */
+@media(prefers-reduced-motion:reduce){
+  *{transition-duration:0.01ms!important;animation-duration:0.01ms!important;}
+}
 </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -677,14 +686,14 @@ body{font-family:var(--font-text);background:var(--paper);color:var(--ink);min-h
       <div id="dash-summary-strip" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
 
         <!-- Suscripciones — solo monto mensual -->
-        <div onclick="showView('subscriptions')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 14px rgba(0,0,0,0.07)'" onmouseout="this.style.boxShadow=''">
+        <div onclick="showView('subscriptions')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s;" class="hover-lift">
           <span style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Suscripciones / mes</span>
           <div id="dash-subs-amount" style="font-family:var(--font-text);font-size:22px;font-weight:700;color:var(--red);line-height:1;">—</div>
           <div id="dash-subs-warning" style="display:none;font-size:10px;color:var(--gold);font-family:'DM Mono',monospace;"></div>
         </div>
 
         <!-- Presupuesto — solo porcentaje -->
-        <div onclick="showView('budget')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 4px 14px rgba(0,0,0,0.07)'" onmouseout="this.style.boxShadow=''">
+        <div onclick="showView('budget')" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s;" class="hover-lift">
           <span style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Presupuesto del mes</span>
           <div style="display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;">
             <div id="dash-budget-spent" style="font-family:var(--font-num);font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-0.5px;">—</div>
@@ -2728,6 +2737,13 @@ function buildCurrencyOptions(selectedCode){let h='',wasC=false;CURRENCIES.forEa
 // ════════════════════════════════════════
 // ── Debounced refresh: collapses rapid calls into one ──────────────────
 let _refreshTimer=null;
+// Pause work when tab is not visible
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden && _refreshTimer){
+    clearTimeout(_refreshTimer);
+    _refreshTimer=null;
+  }
+});
 function refresh(){
   if(_refreshTimer) clearTimeout(_refreshTimer);
   _refreshTimer=setTimeout(function(){_refreshTimer=null;_doRefresh();},40);
