@@ -2576,47 +2576,53 @@ canvas { will-change:auto; }
      MODAL: TEMAS
      ════════════════════════════════════════ -->
 <div class="modal-overlay" id="theme-modal">
-  <div class="modal" style="max-width:480px;">
+  <div class="modal" style="max-width:420px;">
     <div class="modal-title">🎨 Tema</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:22px;">
 
       <!-- Revolut -->
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center;padding-bottom:4px;">Revolut</div>
-        <div id="tc-revolut" class="theme-card" onclick="applyTheme('revolut');rebuildThemeGrid();">
-          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#0a0a0f 45%,#6366f1 100%);margin-bottom:8px;"></div>
-          <div style="font-size:11px;font-weight:600;color:var(--ink);">Claro</div>
+      <div id="tc-revolut-group" style="border:1.5px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:border-color 0.15s;" onclick="applyTheme(document.getElementById('tog-revolut').dataset.mode);rebuildThemeGrid();">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--ink);">Revolut</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px;">Índigo · Blanco</div>
+          </div>
+          <div id="tog-revolut" data-mode="revolut" style="display:flex;background:var(--cream);border-radius:8px;padding:3px;gap:2px;" onclick="event.stopPropagation();">
+            <button onclick="document.getElementById('tog-revolut').dataset.mode='revolut';applyTheme('revolut');rebuildThemeGrid();" id="tog-revolut-l" style="padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-text);transition:all 0.15s;">☀ Claro</button>
+            <button onclick="document.getElementById('tog-revolut').dataset.mode='revolut_dark';applyTheme('revolut_dark');rebuildThemeGrid();" id="tog-revolut-d" style="padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-text);transition:all 0.15s;">🌙 Oscuro</button>
+          </div>
         </div>
-        <div id="tc-revolut_dark" class="theme-card" onclick="applyTheme('revolut_dark');rebuildThemeGrid();">
-          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#050508 45%,#4338ca 100%);margin-bottom:8px;"></div>
-          <div style="font-size:11px;font-weight:600;color:var(--ink);">Oscuro</div>
-        </div>
+        <div style="height:36px;border-radius:8px;background:linear-gradient(135deg,#0a0a0f 45%,#6366f1 100%);"></div>
       </div>
 
       <!-- Océano -->
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center;padding-bottom:4px;">Océano</div>
-        <div id="tc-ocean" class="theme-card" onclick="applyTheme('ocean');rebuildThemeGrid();">
-          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#0c1e35 45%,#1a5fa0 100%);margin-bottom:8px;"></div>
-          <div style="font-size:11px;font-weight:600;color:var(--ink);">Claro</div>
+      <div id="tc-ocean-group" style="border:1.5px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:border-color 0.15s;" onclick="applyTheme(document.getElementById('tog-ocean').dataset.mode);rebuildThemeGrid();">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--ink);">Océano</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px;">Azul marino</div>
+          </div>
+          <div id="tog-ocean" data-mode="ocean" style="display:flex;background:var(--cream);border-radius:8px;padding:3px;gap:2px;" onclick="event.stopPropagation();">
+            <button onclick="document.getElementById('tog-ocean').dataset.mode='ocean';applyTheme('ocean');rebuildThemeGrid();" id="tog-ocean-l" style="padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-text);transition:all 0.15s;">☀ Claro</button>
+            <button onclick="document.getElementById('tog-ocean').dataset.mode='ocean_dark';applyTheme('ocean_dark');rebuildThemeGrid();" id="tog-ocean-d" style="padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-text);transition:all 0.15s;">🌙 Oscuro</button>
+          </div>
         </div>
-        <div id="tc-ocean_dark" class="theme-card" onclick="applyTheme('ocean_dark');rebuildThemeGrid();">
-          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#03080f 45%,#0c4a6e 100%);margin-bottom:8px;"></div>
-          <div style="font-size:11px;font-weight:600;color:var(--ink);">Oscuro</div>
-        </div>
+        <div style="height:36px;border-radius:8px;background:linear-gradient(135deg,#0c1e35 45%,#1a5fa0 100%);"></div>
       </div>
 
       <!-- Obsidian -->
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center;padding-bottom:4px;">Obsidian</div>
-        <div id="tc-obsidian" class="theme-card" onclick="applyTheme('obsidian');rebuildThemeGrid();">
-          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#09090f 40%,#4c1d95 70%,#7c3aed 100%);margin-bottom:8px;"></div>
-          <div style="font-size:11px;font-weight:600;color:var(--ink);">Claro</div>
+      <div id="tc-obsidian-group" style="border:1.5px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:border-color 0.15s;" onclick="applyTheme(document.getElementById('tog-obsidian').dataset.mode);rebuildThemeGrid();">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--ink);">Obsidian</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px;">Negro · Morado</div>
+          </div>
+          <div id="tog-obsidian" data-mode="obsidian" style="display:flex;background:var(--cream);border-radius:8px;padding:3px;gap:2px;" onclick="event.stopPropagation();">
+            <button onclick="document.getElementById('tog-obsidian').dataset.mode='obsidian';applyTheme('obsidian');rebuildThemeGrid();" id="tog-obsidian-l" style="padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-text);transition:all 0.15s;">☀ Claro</button>
+            <button onclick="document.getElementById('tog-obsidian').dataset.mode='obsidian_dark';applyTheme('obsidian_dark');rebuildThemeGrid();" id="tog-obsidian-d" style="padding:4px 12px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:var(--font-text);transition:all 0.15s;">🌙 Oscuro</button>
+          </div>
         </div>
-        <div id="tc-obsidian_dark" class="theme-card" onclick="applyTheme('obsidian_dark');rebuildThemeGrid();">
-          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#050508 40%,#1e1b30 70%,#7c3aed 100%);margin-bottom:8px;"></div>
-          <div style="font-size:11px;font-weight:600;color:var(--ink);">Oscuro</div>
-        </div>
+        <div style="height:36px;border-radius:8px;background:linear-gradient(135deg,#09090f 40%,#4c1d95 70%,#7c3aed 100%);"></div>
       </div>
 
     </div>
@@ -5472,7 +5478,6 @@ function applyTheme(name,silent=false){
   _updateDarkToggleBtn();
 }
 function openThemePicker(){
-  switchThemeTab('presets');
   rebuildThemeGrid();
   document.getElementById('theme-modal').classList.add('open');
 }
@@ -7445,22 +7450,7 @@ function updateFxLookupResult(rate) {
 // THEME SYSTEM — tabs + custom editor
 // ════════════════════════════════════════
 function switchThemeTab(tab) {
-  document.getElementById('theme-panel-presets').style.display = tab==='presets' ? 'block' : 'none';
-  document.getElementById('theme-panel-custom').style.display  = tab==='custom'  ? 'block' : 'none';
-  const btnPresets = document.getElementById('theme-tab-presets');
-  const btnCustom  = document.getElementById('theme-tab-custom');
-  [btnPresets, btnCustom].forEach(b => {
-    b.style.background = 'none';
-    b.style.color = 'var(--muted)';
-    b.style.borderColor = 'var(--border)';
-    b.style.fontWeight = '400';
-  });
-  const active = tab==='presets' ? btnPresets : btnCustom;
-  active.style.background = 'var(--gold)';
-  active.style.color = 'var(--ink)';
-  active.style.borderColor = 'var(--gold)';
-  active.style.fontWeight = '600';
-  if(tab==='custom') loadCustomEditorFromCurrent();
+  // Simplified - no tabs in new picker
 }
 function loadCustomEditorFromCurrent() {
   const t = THEMES[currentTheme] || THEMES.classic;
@@ -7544,9 +7534,34 @@ function resetCustomEditor() {
   loadCustomEditorFromCurrent();
 }
 function rebuildThemeGrid(){
-  // Mark the active theme card in the static picker
-  document.querySelectorAll('.theme-card').forEach(el=>{
-    el.classList.toggle('active', el.id==='tc-'+currentTheme);
+  const t = currentTheme;
+  const base = t.replace('_dark','');
+  const isDark = t.endsWith('_dark');
+  // Highlight active group
+  ['revolut','ocean','obsidian'].forEach(name=>{
+    const grp = document.getElementById('tc-'+name+'-group');
+    if(!grp) return;
+    const isActive = base === name;
+    grp.style.borderColor = isActive ? 'var(--gold)' : 'var(--border)';
+    grp.style.boxShadow   = isActive ? '0 0 0 2px rgba(201,168,76,0.18)' : 'none';
+    // Toggle buttons
+    const btnL = document.getElementById('tog-'+name+'-l');
+    const btnD = document.getElementById('tog-'+name+'-d');
+    const tog  = document.getElementById('tog-'+name);
+    if(!btnL||!btnD||!tog) return;
+    // Update dataset so clicking card uses current toggle state
+    if(isActive) tog.dataset.mode = t;
+    const activeBtn  = isActive && isDark ? btnD : (isActive ? btnL : null);
+    [btnL,btnD].forEach(b=>{
+      b.style.background = '';
+      b.style.color = 'var(--muted)';
+      b.style.boxShadow = 'none';
+    });
+    if(activeBtn){
+      activeBtn.style.background = 'var(--card)';
+      activeBtn.style.color = 'var(--ink)';
+      activeBtn.style.boxShadow = '0 1px 4px rgba(0,0,0,0.12)';
+    }
   });
 }
 function deleteCustomTheme(key) {
