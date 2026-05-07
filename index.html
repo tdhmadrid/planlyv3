@@ -2576,88 +2576,51 @@ canvas { will-change:auto; }
      MODAL: TEMAS
      ════════════════════════════════════════ -->
 <div class="modal-overlay" id="theme-modal">
-  <div class="modal" style="max-width:560px;">
-    <div class="modal-title">🎨 Temas</div>
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-title">🎨 Tema</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
 
-    <!-- Tabs -->
-    <div style="display:flex;gap:8px;margin-bottom:18px;">
-      <button id="theme-tab-presets" onclick="switchThemeTab('presets')"
-        style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--gold);background:var(--gold);color:var(--ink);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;font-weight:600;">
-        PRESETS
-      </button>
-      <button id="theme-tab-custom" onclick="switchThemeTab('custom')"
-        style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;font-weight:400;">
-        PERSONALIZADO
-      </button>
-    </div>
-
-    <!-- Panel presets -->
-    <div id="theme-panel-presets">
-      <div id="theme-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:380px;overflow-y:auto;padding-right:4px;"></div>
-    </div>
-
-    <!-- Panel custom -->
-    <div id="theme-panel-custom" style="display:none;">
-      <div id="cp-preview-bar" style="height:28px;border-radius:8px;margin-bottom:16px;"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-        <label style="font-size:12px;color:var(--muted);">Fondo <input type="color" id="cp-paper" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Tarjetas <input type="color" id="cp-card" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Texto <input type="color" id="cp-ink" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Crema <input type="color" id="cp-cream" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Borde <input type="color" id="cp-border" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Apagado <input type="color" id="cp-muted" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Acento <input type="color" id="cp-gold" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Verde <input type="color" id="cp-green" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Rojo <input type="color" id="cp-red" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Azul <input type="color" id="cp-blue" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Sidebar <input type="color" id="cp-sidebar" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-        <label style="font-size:12px;color:var(--muted);">Acento sidebar <input type="color" id="cp-sidebar-accent" oninput="liveCustomTheme()" style="margin-left:6px;border:none;background:none;width:32px;height:22px;cursor:pointer;"></label>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Nombre del tema</label>
-        <input class="form-input" id="cp-name" placeholder="Mi tema">
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
-        <button class="btn-cancel" onclick="resetCustomEditor()">Resetear</button>
-        <button class="btn-save" onclick="saveCustomTheme()">Guardar tema</button>
-      </div>
-    </div>
-
-    <!-- Fuentes -->
-    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
-      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Tipografía</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div>
-          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">Textos</label>
-          <select id="font-text-sel" class="form-select" style="font-size:12px;padding:6px 10px;" onchange="applyFontChoice()">
-            <option value="DM Sans">DM Sans (default)</option>
-            <option value="Inter">Inter</option>
-            <option value="Lato">Lato</option>
-            <option value="Nunito">Nunito</option>
-            <option value="Roboto">Roboto</option>
-            <option value="Open Sans">Open Sans</option>
-            <option value="Merriweather">Merriweather</option>
-            <option value="Playfair Display">Playfair Display</option>
-          </select>
-          <div id="font-text-preview" style="margin-top:6px;font-size:13px;color:var(--ink);padding:5px 8px;background:var(--cream);border-radius:6px;">El dinero trabaja para ti</div>
+      <!-- Revolut -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center;padding-bottom:4px;">Revolut</div>
+        <div id="tc-revolut" class="theme-card" onclick="applyTheme('revolut');rebuildThemeGrid();">
+          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#0a0a0f 45%,#6366f1 100%);margin-bottom:8px;"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink);">Claro</div>
         </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:5px;">Números</label>
-          <select id="font-num-sel" class="form-select" style="font-size:12px;padding:6px 10px;" onchange="applyFontChoice()">
-            <option value="DM Mono">DM Mono (default)</option>
-            <option value="JetBrains Mono">JetBrains Mono</option>
-            <option value="Fira Code">Fira Code</option>
-            <option value="IBM Plex Mono">IBM Plex Mono</option>
-            <option value="Roboto Mono">Roboto Mono</option>
-            <option value="Space Mono">Space Mono</option>
-            <option value="Courier Prime">Courier Prime</option>
-          </select>
-          <div id="font-num-preview" style="margin-top:6px;font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);padding:5px 8px;background:var(--cream);border-radius:6px;">MX$12,345.67</div>
+        <div id="tc-revolut_dark" class="theme-card" onclick="applyTheme('revolut_dark');rebuildThemeGrid();">
+          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#050508 45%,#4338ca 100%);margin-bottom:8px;"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink);">Oscuro</div>
         </div>
       </div>
-    </div>
 
-    <div style="text-align:right;margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
+      <!-- Océano -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center;padding-bottom:4px;">Océano</div>
+        <div id="tc-ocean" class="theme-card" onclick="applyTheme('ocean');rebuildThemeGrid();">
+          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#0c1e35 45%,#1a5fa0 100%);margin-bottom:8px;"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink);">Claro</div>
+        </div>
+        <div id="tc-ocean_dark" class="theme-card" onclick="applyTheme('ocean_dark');rebuildThemeGrid();">
+          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#03080f 45%,#0c4a6e 100%);margin-bottom:8px;"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink);">Oscuro</div>
+        </div>
+      </div>
+
+      <!-- Obsidian -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;text-align:center;padding-bottom:4px;">Obsidian</div>
+        <div id="tc-obsidian" class="theme-card" onclick="applyTheme('obsidian');rebuildThemeGrid();">
+          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#09090f 40%,#4c1d95 70%,#7c3aed 100%);margin-bottom:8px;"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink);">Claro</div>
+        </div>
+        <div id="tc-obsidian_dark" class="theme-card" onclick="applyTheme('obsidian_dark');rebuildThemeGrid();">
+          <div style="height:44px;border-radius:8px;background:linear-gradient(135deg,#050508 40%,#1e1b30 70%,#7c3aed 100%);margin-bottom:8px;"></div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink);">Oscuro</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-actions">
       <button class="btn-cancel" onclick="document.getElementById('theme-modal').classList.remove('open')">Cerrar</button>
     </div>
   </div>
@@ -5450,85 +5413,50 @@ function deleteExpenseProvider(id){if(!confirm('¿Eliminar este proveedor?'))ret
 // THEME SYSTEM
 // ════════════════════════════════════════
 const THEMES={
-  classic:{
-    ink:'#0f0e0d',paper:'#f5f0e8',cream:'#ede8dc',gold:'#c9a84c','gold-light':'#e8d49a',
-    red:'#c0392b',green:'#2d7a4f',blue:'#2c5f8a',purple:'#6c3483',muted:'#8a8278',
-    border:'#d4cfc5',card:'#faf7f2',
-    _sidebar:'#0f0e0d',_sidebarAccent:'#c9a84c',_name:'Clásico',_sub:'Dorado oscuro',
-    _prev:'linear-gradient(135deg,#0f0e0d 55%,#c9a84c 100%)'
+  revolut:{
+    ink:'#0a0a0f',paper:'#f8f8fc',cream:'#f0f0f8',gold:'#6366f1','gold-light':'#e0e7ff',
+    red:'#dc2626',green:'#16a34a',blue:'#2563eb',purple:'#7c3aed',muted:'#6b7280',
+    border:'#e5e4f0',card:'#ffffff',
+    _sidebar:'#0a0a0f',_sidebarAccent:'#6366f1',_name:'Revolut',_sub:'Claro',
+    _prev:'linear-gradient(135deg,#0a0a0f 45%,#6366f1 100%)'
+  },
+  revolut_dark:{
+    ink:'#f0f0f8',paper:'#0a0a0f',cream:'#13131e',gold:'#818cf8','gold-light':'#c7d2fe',
+    red:'#f87171',green:'#4ade80',blue:'#60a5fa',purple:'#a78bfa',muted:'#6b7280',
+    border:'#1e1b30',card:'#13131e',
+    _sidebar:'#050508',_sidebarAccent:'#6366f1',_name:'Revolut',_sub:'Oscuro',
+    _prev:'linear-gradient(135deg,#050508 45%,#4338ca 100%)'
   },
   ocean:{
     ink:'#0c1e35',paper:'#edf4fb',cream:'#dce9f5',gold:'#d4820a','gold-light':'#f0c060',
     red:'#c0312b',green:'#1a7545',blue:'#1a5fa0',purple:'#5830a0',muted:'#4a6a88',
     border:'#b0cce4',card:'#f3f9ff',
-    _sidebar:'#0c1e35',_sidebarAccent:'#d4820a',_name:'Océano',_sub:'Azul noche',
-    _prev:'linear-gradient(135deg,#0c1e35 55%,#d4820a 100%)'
+    _sidebar:'#0c1e35',_sidebarAccent:'#d4820a',_name:'Océano',_sub:'Claro',
+    _prev:'linear-gradient(135deg,#0c1e35 45%,#1a5fa0 100%)'
+  },
+  ocean_dark:{
+    ink:'#cce4f8',paper:'#060e18',cream:'#0c1825',gold:'#38bdf8','gold-light':'#7dd3fc',
+    red:'#f87171',green:'#34d399',blue:'#38bdf8',purple:'#818cf8',muted:'#4a6a88',
+    border:'#0f2035',card:'#0c1825',
+    _sidebar:'#03080f',_sidebarAccent:'#0ea5e9',_name:'Océano',_sub:'Oscuro',
+    _prev:'linear-gradient(135deg,#03080f 45%,#0c4a6e 100%)'
   },
   obsidian:{
     ink:'#0d0d0f',paper:'#f8f8fc',cream:'#efeff7',gold:'#7c3aed','gold-light':'#ddd6fe',
     red:'#dc2626',green:'#059669',blue:'#2563eb',purple:'#7c3aed',muted:'#6b7280',
     border:'#e2e0ee',card:'#ffffff',
-    _sidebar:'#09090f',_sidebarAccent:'#a78bfa',_name:'Obsidian',_sub:'Plata · Morado',
+    _sidebar:'#09090f',_sidebarAccent:'#a78bfa',_name:'Obsidian',_sub:'Claro',
     _prev:'linear-gradient(135deg,#09090f 40%,#4c1d95 70%,#7c3aed 100%)'
   },
   obsidian_dark:{
     ink:'#f1f0f7',paper:'#0d0d14',cream:'#13131e',gold:'#a78bfa','gold-light':'#c4b5fd',
     red:'#f87171',green:'#34d399',blue:'#60a5fa',purple:'#a78bfa',muted:'#6b7280',
     border:'#1e1b30',card:'#141420',
-    _sidebar:'#050508',_sidebarAccent:'#7c3aed',_name:'Obsidian Dark',_sub:'Negro · Plata',
+    _sidebar:'#050508',_sidebarAccent:'#7c3aed',_name:'Obsidian',_sub:'Oscuro',
     _prev:'linear-gradient(135deg,#050508 40%,#1e1b30 70%,#7c3aed 100%)'
   },
-  midnight:{
-    ink:'#e8e4f0',paper:'#12101a',cream:'#1e1a2e',gold:'#a78bfa','gold-light':'#c4b5fd',
-    red:'#f87171',green:'#4ade80',blue:'#60a5fa',purple:'#c084fc',muted:'#6b7280',
-    border:'#2d2a3e',card:'#1a1726',
-    _sidebar:'#0c0a14',_sidebarAccent:'#a78bfa',_name:'Medianoche',_sub:'Púrpura oscuro',
-    _prev:'linear-gradient(135deg,#0c0a14 55%,#a78bfa 100%)'
-  },
-  slate:{
-    ink:'#f1f5f9',paper:'#0f172a',cream:'#1e293b',gold:'#f59e0b','gold-light':'#fcd34d',
-    red:'#ef4444',green:'#22c55e',blue:'#3b82f6',purple:'#8b5cf6',muted:'#64748b',
-    border:'#334155',card:'#1e293b',
-    _sidebar:'#020617',_sidebarAccent:'#f59e0b',_name:'Pizarra',_sub:'Azul carbón',
-    _prev:'linear-gradient(135deg,#020617 55%,#f59e0b 100%)'
-  },
-  rose:{
-    ink:'#1a0a0e',paper:'#fff5f7',cream:'#ffe4ea',gold:'#e11d48','gold-light':'#fb7185',
-    red:'#be123c',green:'#15803d',blue:'#1d4ed8',purple:'#7c3aed',muted:'#9f6674',
-    border:'#fecdd3',card:'#fff8fa',
-    _sidebar:'#1a0a0e',_sidebarAccent:'#e11d48',_name:'Rosa',_sub:'Rojo carmín',
-    _prev:'linear-gradient(135deg,#1a0a0e 55%,#e11d48 100%)'
-  },
-  arctic:{
-    ink:'#0a1628',paper:'#f0f7ff',cream:'#ddeeff',gold:'#0ea5e9','gold-light':'#7dd3fc',
-    red:'#dc2626',green:'#059669',blue:'#0284c7',purple:'#7c3aed',muted:'#4a7898',
-    border:'#bae6fd',card:'#f8fbff',
-    _sidebar:'#0a1628',_sidebarAccent:'#0ea5e9',_name:'Ártico',_sub:'Azul glacial',
-    _prev:'linear-gradient(135deg,#0a1628 55%,#0ea5e9 100%)'
-  },
-  sand:{
-    ink:'#2c1a08',paper:'#fdf6ed',cream:'#f5e8d0',gold:'#d97706','gold-light':'#fbbf24',
-    red:'#b91c1c',green:'#15803d',blue:'#1e40af',purple:'#6d28d9',muted:'#92715a',
-    border:'#e5c99a',card:'#fefbf5',
-    _sidebar:'#1c0f04',_sidebarAccent:'#d97706',_name:'Arena',_sub:'Cálido tostado',
-    _prev:'linear-gradient(135deg,#1c0f04 55%,#d97706 100%)'
-  },
-  emerald:{
-    ink:'#022c22',paper:'#ecfdf5',cream:'#d1fae5',gold:'#10b981','gold-light':'#6ee7b7',
-    red:'#dc2626',green:'#047857',blue:'#0369a1',purple:'#7c3aed',muted:'#4a7a68',
-    border:'#a7f3d0',card:'#f0fdf9',
-    _sidebar:'#022c22',_sidebarAccent:'#10b981',_name:'Esmeralda',_sub:'Verde menta',
-    _prev:'linear-gradient(135deg,#022c22 55%,#10b981 100%)'
-  },
-  dusk:{
-    ink:'#1e1025',paper:'#fdf4ff',cream:'#f3e8ff',gold:'#d946ef','gold-light':'#e879f9',
-    red:'#dc2626',green:'#16a34a',blue:'#2563eb',purple:'#9333ea',muted:'#7c5a8a',
-    border:'#e9d5ff',card:'#fdf8ff',
-    _sidebar:'#1e1025',_sidebarAccent:'#d946ef',_name:'Atardecer',_sub:'Violeta índigo',
-    _prev:'linear-gradient(135deg,#1e1025 55%,#d946ef 100%)'
-  },
 };
-let currentTheme='classic';
+let currentTheme='revolut';
 function applyTheme(name,silent=false){
   const t=THEMES[name];if(!t)return;
   const r=document.documentElement;
@@ -7615,18 +7543,11 @@ function saveCustomTheme() {
 function resetCustomEditor() {
   loadCustomEditorFromCurrent();
 }
-function rebuildThemeGrid() {
-  const grid = document.getElementById('theme-cards-grid');
-  if(!grid) return;
-  grid.innerHTML = Object.entries(THEMES).map(([key, t]) => {
-    const isCustom = t._custom;
-    return `<div class="theme-card${currentTheme===key?' active':''}" id="tc-${key}" onclick="applyTheme('${key}');rebuildThemeGrid();" style="position:relative;">
-      <div style="height:48px;border-radius:8px;background:${t._prev};margin-bottom:8px;"></div>
-      <div style="font-weight:700;font-size:12px;">${t._name}</div>
-      <div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:1px;">${t._sub}</div>
-      ${isCustom ? `<button onclick="event.stopPropagation();deleteCustomTheme('${key}')" style="position:absolute;top:5px;right:5px;background:rgba(192,57,43,0.15);border:none;border-radius:4px;width:18px;height:18px;cursor:pointer;color:var(--red);font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center;">✕</button>` : ''}
-    </div>`;
-  }).join('');
+function rebuildThemeGrid(){
+  // Mark the active theme card in the static picker
+  document.querySelectorAll('.theme-card').forEach(el=>{
+    el.classList.toggle('active', el.id==='tc-'+currentTheme);
+  });
 }
 function deleteCustomTheme(key) {
   if(!THEMES[key]?._custom) return;
@@ -7636,7 +7557,7 @@ function deleteCustomTheme(key) {
     delete customs[key];
     localStorage.setItem('flujo_custom_themes', JSON.stringify(customs));
   } catch(e) {}
-  if(currentTheme === key) applyTheme('classic', true);
+  if(currentTheme === key) applyTheme('revolut', true);
   rebuildThemeGrid();
   flujoToast('Tema eliminado');
 }
