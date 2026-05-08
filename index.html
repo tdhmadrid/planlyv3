@@ -13,8 +13,7 @@ const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Flujo — Finanzas Personales</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-:root{
+<style>:root{
  --accent:#6366f1;
  --accent-light:#e0e7ff;
  --accent-dark:#4f46e5;
@@ -55,11 +54,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .sidebar-logo h1{font-family:var(--font-text);font-size:26px;color:var(--gold);letter-spacing:-0.5px;}
 .sidebar-logo span{font-family:var(--font-num);font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
 .nav-section{padding:10px 10px 2px;}
-.nav-label{font-family:var(--font-text);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:0 12px;margin-bottom:3px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r-sm);cursor:pointer;transition:background 0.12s;color:var(--sidebar-text);font-size:12px;font-weight:500;margin-bottom:2px;letter-spacing:0.1px;}
+.nav-label{font-family:var(--font-text);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:0 12px;margin-bottom:3px;;pointer-events:none;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;transition:background 0.12s;color:var(--sidebar-text);font-size:12px;font-weight:500;margin-bottom:2px;letter-spacing:0.1px;}
 .nav-item:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.85);}
 .nav-item.active{background:var(--gold);color:var(--ink);font-weight:500;}
-.nav-item .icon{font-size:13px;width:18px;text-align:center;flex-shrink:0;}
+.nav-item .icon{font-size:13px;width:18px;text-align:center;flex-shrink:0;pointer-events:none;}
 .sidebar-footer{margin-top:auto;padding:14px 28px;border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;}
 .month-selector{display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.6);font-family:var(--font-num);font-size:11px;}
 .month-btn{background:none;border:none;cursor:pointer;color:var(--gold);font-size:16px;padding:0 4px;}
@@ -880,9 +879,7 @@ canvas { will-change:auto; }
 .hover-lift-sm {  }
 
 .theme-card:hover{border-color:var(--gold);}</style>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link id="gfonts-extra" rel="stylesheet" href="">
+      <link id="gfonts-extra" rel="stylesheet" href="">
 </head>
 <body>
 
@@ -6546,8 +6543,7 @@ function exportReportPDF(){
   printWin.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8">
     <title>Flujo — Reporte ${rangeLabel}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
-    <style>
+        <style>
       :root{--ink:#0f0e0d;--cream:#ede8dc;--gold:#c9a84c;--red:#c0392b;--green:#2d7a4f;--blue:#2c5f8a;--muted:#8a8278;--border:#d4cfc5;}
       *{margin:0;padding:0;box-sizing:border-box;}
       body{font-family:'DM Sans',sans-serif;background:#fff;color:var(--ink);padding:28px;font-size:13px;}
