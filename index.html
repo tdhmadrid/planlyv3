@@ -3502,8 +3502,10 @@ function renderExpenseView(txs,data){
   let f=[...expTxs];
   if(expenseAccountFilter!=='all')f=f.filter(t=>t.accountId===expenseAccountFilter);
   if(expenseCatFilter!=='all')f=f.filter(t=>t.category===expenseCatFilter);
-  // Add credit_payment to the display — filtered by account too
-  const filteredPayTxs = expenseAccountFilter==='all' ? payTxs : payTxs.filter(t=>t.accountId===expenseAccountFilter);
+  // Add credit_payment only when NO category filter is active
+  // (credit payments have no category — showing them under "Restaurantes" makes no sense)
+  const filteredPayTxs = expenseCatFilter!=='all' ? [] :
+    (expenseAccountFilter==='all' ? payTxs : payTxs.filter(t=>t.accountId===expenseAccountFilter));
   const displayList=[...f,...filteredPayTxs].sort((a,b)=>new Date(b.date)-new Date(a.date));
   const byCurr={};
   expTxs.forEach(t=>{const c=getTxDisplayCurrency(t,data);byCurr[c]=(byCurr[c]||0)+getTxDisplayAmount(t);});
