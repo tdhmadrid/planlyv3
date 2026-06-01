@@ -8457,14 +8457,18 @@ function toggleMobMenu(){
 function openMobMenu(){
   const menu = document.getElementById('mob-quick-menu');
   const icon = document.getElementById('mob-add-icon');
-  if(menu){ menu.style.display = 'flex'; }
-  if(icon){ icon.style.transform = 'rotate(45deg)'; }
+  if(!menu) return;
+  menu.style.display = 'flex';
+  menu.style.opacity = '0';
+  menu.style.transition = 'opacity 0.2s';
+  requestAnimationFrame(()=>{ menu.style.opacity = '1'; });
+  if(icon) icon.style.transform = 'rotate(45deg)';
 }
 function closeMobMenu(){
   const menu = document.getElementById('mob-quick-menu');
   const icon = document.getElementById('mob-add-icon');
-  if(menu){ menu.style.display = 'none'; }
-  if(icon){ icon.style.transform = 'rotate(0deg)'; }
+  if(menu){ menu.style.opacity = '0'; setTimeout(()=>{ if(menu) menu.style.display = 'none'; }, 200); }
+  if(icon) icon.style.transform = 'rotate(0deg)';
 }
 // ════════════════════════════════════════
 // DARK / LIGHT TOGGLE (mobile quick switch)
@@ -8596,12 +8600,25 @@ function _initFonts() {
     if(session?.user){
       await _onSession(session.user);
       // On mobile: show quick-action overlay after session restores
-      if(window.innerWidth <= 600){
-        setTimeout(openMobMenu, 600);
-      }
+      // Show quick-action on mobile
+      const _isMob = window.innerWidth <= 900 || /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
+      if(_isMob){ setTimeout(openMobMenu, 800); }
     }
     // Si no hay sesión, la pantalla de login ya está visible
   })();
-})();</script>
+})();
+
+// Auto-open quick menu on mobile at startup
+document.addEventListener('DOMContentLoaded', function(){
+  const _mob = window.innerWidth <= 900 || /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
+  if(_mob){
+    // Wait for auth check to complete, then show if logged in
+    setTimeout(function(){
+      const authScreen = document.getElementById('auth-screen');
+      const isLoggedIn = authScreen && authScreen.style.display === 'none';
+      if(isLoggedIn) openMobMenu();
+    }, 1200);
+  }
+});</script>
 </body>
 </html>
