@@ -880,6 +880,11 @@ canvas { will-change:auto; }
 
 .theme-card:hover{border-color:var(--gold);}
 .nav-item .icon svg{display:block;stroke:currentColor;}
+
+/* Quick action overlay — shown on mobile by default */
+@media(max-width:900px){
+  #mob-quick-menu:not(.mob-dismissed){ display:flex !important; }
+}
 </style>
       <link id="gfonts-extra" rel="stylesheet" href="">
 </head>
@@ -2974,6 +2979,10 @@ async function _onSession(user){
   document.getElementById('sb-user-info').style.display='block';
   document.getElementById('auth-screen').style.display='none';
   document.body.style.overflow='';
+  // Show quick-action overlay on mobile immediately after login
+  if(/iPhone|iPad|iPod|Android|Mobile/i.test(navigator.userAgent) || window.innerWidth <= 900){
+    setTimeout(openMobMenu, 500);
+  }
   // 1. Caché local → renderizar INMEDIATAMENTE (0ms de espera)
   const cached = _loadCache();
   if(cached){
@@ -8458,6 +8467,7 @@ function openMobMenu(){
   const menu = document.getElementById('mob-quick-menu');
   const icon = document.getElementById('mob-add-icon');
   if(!menu) return;
+  menu.classList.remove('mob-dismissed');
   menu.style.display = 'flex';
   menu.style.opacity = '0';
   menu.style.transition = 'opacity 0.2s';
@@ -8467,7 +8477,12 @@ function openMobMenu(){
 function closeMobMenu(){
   const menu = document.getElementById('mob-quick-menu');
   const icon = document.getElementById('mob-add-icon');
-  if(menu){ menu.style.opacity = '0'; setTimeout(()=>{ if(menu) menu.style.display = 'none'; }, 200); }
+  if(menu){
+    menu.style.opacity = '0';
+    setTimeout(()=>{
+      if(menu){ menu.style.display = 'none'; menu.classList.add('mob-dismissed'); }
+    }, 200);
+  }
   if(icon) icon.style.transform = 'rotate(0deg)';
 }
 // ════════════════════════════════════════
@@ -8600,25 +8615,11 @@ function _initFonts() {
     if(session?.user){
       await _onSession(session.user);
       // On mobile: show quick-action overlay after session restores
-      // Show quick-action on mobile
-      const _isMob = window.innerWidth <= 900 || /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
-      if(_isMob){ setTimeout(openMobMenu, 800); }
+
     }
     // Si no hay sesión, la pantalla de login ya está visible
   })();
 })();
-
-// Auto-open quick menu on mobile at startup
-document.addEventListener('DOMContentLoaded', function(){
-  const _mob = window.innerWidth <= 900 || /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent);
-  if(_mob){
-    // Wait for auth check to complete, then show if logged in
-    setTimeout(function(){
-      const authScreen = document.getElementById('auth-screen');
-      const isLoggedIn = authScreen && authScreen.style.display === 'none';
-      if(isLoggedIn) openMobMenu();
-    }, 1200);
-  }
-});</script>
+</script>
 </body>
 </html>
