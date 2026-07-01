@@ -3159,11 +3159,16 @@ function refresh(){
   const data=loadData();
   const txs=getMonthTx(data);
   const incTxs=txs.filter(t=>t.type==='income');
-  const expTxs=txs.filter(t=>t.type==='expense');
+  const expTxs=txs.filter(t=>t.type==='expense').filter(t=>{
+    const acc=data.accounts.find(a=>a.id===t.accountId);
+    return acc?.type!=='credit';
+  });
+  const payTxs=txs.filter(t=>t.type==='credit_payment');
   // Group by display currency
   const incByCurr={},expByCurr={};
   incTxs.forEach(t=>{const c=getTxDisplayCurrency(t,data);incByCurr[c]=(incByCurr[c]||0)+getTxDisplayAmount(t);});
   expTxs.forEach(t=>{const c=getTxDisplayCurrency(t,data);expByCurr[c]=(expByCurr[c]||0)+getTxDisplayAmount(t);});
+  payTxs.forEach(t=>{const fc=data.accounts.find(a=>a.id===t.accountId)?.currency||'MXN';expByCurr[fc]=(expByCurr[fc]||0)+t.amount;});
   // Store globally so refreshStatCards() can re-use without re-computing
   window._statIncByCurr = incByCurr;
   window._statExpByCurr = expByCurr;
