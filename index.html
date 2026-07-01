@@ -6375,14 +6375,23 @@ function buildReportHTML({ data, txs, rangeLabel }){
   const showPresupuesto= chk('rpt-presupuesto');
   const showMetas      = chk('rpt-metas');
   const showInversiones= chk('rpt-inversiones');
-  const rptTarget = document.getElementById('rpt-target-curr')?.value || '';
+  // Use same TC as dashboard (stat-fx-target), fallback to rpt-target-curr
+  const _dashTc = document.getElementById('stat-fx-target')?.value || '';
+  const _rptTcEl = document.getElementById('rpt-target-curr');
+  const rptTarget = (_rptTcEl?.value) || _dashTc || '';
   const priCurr = getPrimaryCurrency(data);
   const incTxs = txs.filter(t=>t.type==='income');
-  const expTxs = txs.filter(t=>t.type==='expense');
-  // Raw by-currency totals
+  // Match dashboard: exclude credit account expenses, include credit_payment
+  const expTxs = txs.filter(t=>t.type==='expense').filter(t=>{
+    const acc=data.accounts.find(a=>a.id===t.accountId);
+    return acc?.type!=='credit';
+  });
+  const payTxs = txs.filter(t=>t.type==='credit_payment');
+  // Raw by-currency totals — use getTxDisplayAmount for FX consistency
   const incByCurr={}, expByCurr={};
-  incTxs.forEach(t=>{const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';incByCurr[c]=(incByCurr[c]||0)+(t.amount||0);});
-  expTxs.forEach(t=>{const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';expByCurr[c]=(expByCurr[c]||0)+(t.amount||0);});
+  incTxs.forEach(t=>{const c=getTxDisplayCurrency(t,data);incByCurr[c]=(incByCurr[c]||0)+getTxDisplayAmount(t);});
+  expTxs.forEach(t=>{const c=getTxDisplayCurrency(t,data);expByCurr[c]=(expByCurr[c]||0)+getTxDisplayAmount(t);});
+  payTxs.forEach(t=>{const fc=data.accounts.find(a=>a.id===t.accountId)?.currency||'MXN';expByCurr[fc]=(expByCurr[fc]||0)+(t.amount||0);});
   // Consolidate per-currency map to target currency
   const _consolidate = (byC) => {
     if (!rptTarget) return byC;
@@ -6409,16 +6418,22 @@ function buildReportHTML({ data, txs, rangeLabel }){
   // Per-category breakdowns — convert each amount when target is set
   const expByCat={};
   expTxs.forEach(t=>{
-    // Use account currency + t.amount (same as pie) for consistency
-    const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';
-    const a=t.amount||0;
+    const c=getTxDisplayCurrency(t,data);
+    const a=getTxDisplayAmount(t);
     if(!expByCat[t.category])expByCat[t.category]={};
     expByCat[t.category][c]=(expByCat[t.category][c]||0)+a;
   });
+  // Include credit_payment as a category
+  payTxs.forEach(t=>{
+    const fc=data.accounts.find(a=>a.id===t.accountId)?.currency||'MXN';
+    const cat='Pago tarjeta';
+    if(!expByCat[cat])expByCat[cat]={};
+    expByCat[cat][fc]=(expByCat[cat][fc]||0)+(t.amount||0);
+  });
   const incByCat={};
   incTxs.forEach(t=>{
-    const c=(data.accounts.find(a=>a.id===t.accountId)?.currency)||'MXN';
-    const a=t.amount||0;
+    const c=getTxDisplayCurrency(t,data);
+    const a=getTxDisplayAmount(t);
     if(!incByCat[t.category])incByCat[t.category]={};
     incByCat[t.category][c]=(incByCat[t.category][c]||0)+a;
   });
