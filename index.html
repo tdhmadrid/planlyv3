@@ -3540,7 +3540,27 @@ function renderIncomeView(txs,data){
   }
   _applyViewFx('income');
   const sb=document.getElementById('income-summary-bar');
-  sb.innerHTML=Object.entries(byCurr).map(([c,v])=>`<div style="background:rgba(45,122,79,0.1);border:1px solid rgba(45,122,79,0.2);border-radius:9px;padding:7px 13px;"><div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;">Total ${c}</div><div style="font-family:var(--font-text);font-size:17px;color:var(--green);font-weight:700;">+${fmt(v,c)}</div></div>`).join('')||'<span style="font-size:12px;color:var(--muted);padding:4px 0;">Sin ingresos este mes</span>';
+  const _incTcSel=document.getElementById('stat-fx-target');
+  const _incTc=_incTcSel?.value||'';
+  const _incTcRate=parseFloat(document.getElementById('stat-tc-input')?.value)||0;
+  const _incEntries=Object.entries(byCurr);
+  if(!_incEntries.length){
+    sb.innerHTML='<span style="font-size:12px;color:var(--muted);padding:4px 0;">Sin ingresos este mes</span>';
+  } else if(_incTc && _incTcRate && _incEntries.some(([c])=>c!==_incTc)){
+    let _incTotal=0, _incAllOk=true;
+    _incEntries.forEach(([c,v])=>{
+      if(c===_incTc){_incTotal+=v;}
+      else if(_incTcRate){_incTotal+=v*_incTcRate;}
+      else{_incAllOk=false;}
+    });
+    const _incApprox=_incAllOk?'':'≈ ';
+    sb.innerHTML=`<div style="background:rgba(45,122,79,0.1);border:1px solid rgba(45,122,79,0.2);border-radius:9px;padding:7px 13px;">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;">Total ${_incTc}${!_incAllOk?' (parcial)':''}</div>
+      <div style="font-family:var(--font-text);font-size:17px;color:var(--green);font-weight:700;">+${_incApprox}${fmt(_incTotal,_incTc)}</div>
+    </div>`;
+  } else {
+    sb.innerHTML=_incEntries.map(([c,v])=>`<div style="background:rgba(45,122,79,0.1);border:1px solid rgba(45,122,79,0.2);border-radius:9px;padding:7px 13px;"><div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;">Total ${c}</div><div style="font-family:var(--font-text);font-size:17px;color:var(--green);font-weight:700;">+${fmt(v,c)}</div></div>`).join('');
+  }
   const el=document.getElementById('income-tx-list');
   const s=f.sort((a,b)=>new Date(b.date)-new Date(a.date));
   el.innerHTML=s.length?s.map(t=>txHTML(t,data)).join(''):'<div class="empty"><div class="empty-icon">↑</div><p>Sin ingresos este mes</p></div>';
@@ -3620,7 +3640,30 @@ function renderExpenseView(txs,data){
   }
   _applyViewFx('expense');
   const sb=document.getElementById('expense-summary-bar');
-  sb.innerHTML=Object.entries(byCurr).map(([c,v])=>`<div style="background:rgba(192,57,43,0.07);border:1px solid rgba(192,57,43,0.18);border-radius:9px;padding:7px 13px;"><div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;">Total ${c}</div><div style="font-family:var(--font-text);font-size:17px;color:var(--red);font-weight:700;">−${fmt(v,c)}</div></div>`).join('')||'<span style="font-size:12px;color:var(--muted);padding:4px 0;">Sin gastos este mes</span>';
+  // Use same TC logic as dashboard stat card
+  const _expTcSel=document.getElementById('stat-fx-target');
+  const _expTc=_expTcSel?.value||'';
+  const _expTcRate=parseFloat(document.getElementById('stat-tc-input')?.value)||0;
+  const _expEntries=Object.entries(byCurr);
+  if(!_expEntries.length){
+    sb.innerHTML='<span style="font-size:12px;color:var(--muted);padding:4px 0;">Sin gastos este mes</span>';
+  } else if(_expTc && _expTcRate && _expEntries.some(([c])=>c!==_expTc)){
+    // Consolidate to TC like dashboard
+    let _expTotal=0, _expAllOk=true;
+    _expEntries.forEach(([c,v])=>{
+      if(c===_expTc){_expTotal+=v;}
+      else if(_expTcRate){_expTotal+=v*_expTcRate;}
+      else{_expAllOk=false;}
+    });
+    const _expApprox=_expAllOk?'':'≈ ';
+    sb.innerHTML=`<div style="background:rgba(192,57,43,0.07);border:1px solid rgba(192,57,43,0.18);border-radius:9px;padding:7px 13px;">
+      <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;">Total ${_expTc}${!_expAllOk?' (parcial)':''}</div>
+      <div style="font-family:var(--font-text);font-size:17px;color:var(--red);font-weight:700;">−${_expApprox}${fmt(_expTotal,_expTc)}</div>
+    </div>`;
+  } else {
+    // No TC or single currency — show per-currency pills
+    sb.innerHTML=_expEntries.map(([c,v])=>`<div style="background:rgba(192,57,43,0.07);border:1px solid rgba(192,57,43,0.18);border-radius:9px;padding:7px 13px;"><div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;">Total ${c}</div><div style="font-family:var(--font-text);font-size:17px;color:var(--red);font-weight:700;">−${fmt(v,c)}</div></div>`).join('');
+  }
   const el=document.getElementById('expense-tx-list');
   el.innerHTML=displayList.length?displayList.map(t=>t.type==='credit_payment'?creditPaymentHTML(t,data):txHTML(t,data)).join(''):'<div class="empty"><div class="empty-icon">↓</div><p>Sin gastos este mes</p></div>';
   // ── Pie: by category — always use account-currency amount (t.amount), not FX spendAmount
