@@ -1056,6 +1056,7 @@ canvas { will-change:auto; }
     <div class="nav-item" id="nav-goals" onclick="showView('goals')"><span class="icon">◎</span>Metas de ahorro</div>
     <div class="nav-item" id="nav-propiedad" onclick="showView('propiedad')"><span class="icon" style="display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>Propiedad</div>
     <div class="nav-item" id="nav-investments" onclick="showView('investments')"><span class="icon" style="display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span>Inversiones</div>
+      <div class="nav-item" id="nav-businesses" onclick="showView('businesses')"><span class="icon" style="display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><line x1="9" y1="22" x2="9" y2="12"/><line x1="15" y1="22" x2="15" y2="12"/></svg></span>Negocios</div>
     <div class="nav-item" id="nav-subscriptions" onclick="showView('subscriptions')"><span class="icon" style="display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>Suscripciones</div>
     <div class="nav-item" id="nav-reports" onclick="openReportModal()"><span class="icon" style="display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>Reportes / PDF</div>
     <div class="nav-item" id="nav-fx" onclick="showView('fx')"><span class="icon" style="display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>Tipos de cambio</div>
@@ -2910,7 +2911,7 @@ function closeSidebar(){
 // ════════════════════════════════════════
 // DATA STORAGE
 // ════════════════════════════════════════
-const _DATA_DEF={transactions:[],budgets:[],goals:[],accounts:[],incomeSources:[],expenseProviders:[],transfers:[],investments:[],subscriptions:[],propiedades:[],customExpenseCats:[],customIncomeCats:[]};
+const _DATA_DEF={transactions:[],budgets:[],goals:[],accounts:[],incomeSources:[],expenseProviders:[],transfers:[],investments:[],subscriptions:[],propiedades:[],customExpenseCats:[],customIncomeCats:[],businesses:[]};
 let _memData=null, _flujoUser=null, _saveTimer=null;
 const _CACHE_KEY = 'flujo_cache_v1';
 // ── Caché local (localStorage) ────────────────────
@@ -3218,6 +3219,7 @@ function refresh(){
     if(!_av||_av==='subscriptions')   _sr2(()=>renderSubscriptionsView(data),'subscriptions');
     if(!_av||_av==='reports')         _sr2(()=>renderReportView(data,txs),'report');
     if(!_av||_av==='propiedad')       _sr2(()=>renderPropiedades(data),'propiedades');
+    if(!_av||_av==='businesses')      _sr2(()=>renderBusinesses(data),'businesses');
   });
 }
 // Returns the "display currency" of a transaction: spendCurrency if FX, else account currency
@@ -8727,6 +8729,296 @@ function _initFonts() {
 })();
 
 
+
+// ════════════════════════════════════════
+// NEGOCIOS — Business Investments
+// ════════════════════════════════════════
+const BUSINESS_TYPES = {
+  restaurant: {label:'Restaurante', icon:'🍽️'},
+  bar:        {label:'Bar',         icon:'🍺'},
+  cafe:       {label:'Cafetería',   icon:'☕'},
+  laundry:    {label:'Lavandería',  icon:'👕'},
+  other:      {label:'Otro',        icon:'🏢'},
+};
+
+function getTotalInvested(biz){
+  return (biz.investments||[]).reduce((s,inv)=>{
+    // Convert to biz.currency if possible, else use raw amount
+    if(inv.currency===biz.currency) return s+inv.amount;
+    return s+inv.amount; // simplified — same currency assumed for now
+  },0);
+}
+function getTotalReturned(biz){
+  return (biz.returns||[]).reduce((s,r)=>{
+    if(r.currency===biz.currency) return s+r.amount;
+    return s+r.amount;
+  },0);
+}
+function getMonthlyAvgReturn(biz){
+  const rets=biz.returns||[];
+  if(!rets.length) return 0;
+  const total=getTotalReturned(biz);
+  // Months since first investment
+  const firstInv=(biz.investments||[]).map(i=>i.date).sort()[0];
+  if(!firstInv) return 0;
+  const months=Math.max(1,Math.round((Date.now()-new Date(firstInv+'T12:00:00'))/(30.44*864e5)));
+  return total/months;
+}
+function getBreakEvenDate(biz){
+  const remaining=getTotalInvested(biz)-getTotalReturned(biz);
+  if(remaining<=0) return null; // already recovered
+  const monthly=getMonthlyAvgReturn(biz);
+  if(!monthly) return null;
+  const months=Math.ceil(remaining/monthly);
+  const d=new Date();
+  d.setMonth(d.getMonth()+months);
+  return d.toLocaleDateString('es-MX',{month:'long',year:'numeric'});
+}
+function getROI(biz){
+  const inv=getTotalInvested(biz);
+  if(!inv) return 0;
+  return Math.round((getTotalReturned(biz)/inv)*100*10)/10;
+}
+
+// ── Open modals ──────────────────────────────────────────────────────────
+function openBusinessModal(id){
+  const data=loadData();
+  const biz=id?data.businesses.find(b=>b.id===id):null;
+  const t=biz||{name:'',type:'restaurant',currency:'MXN',status:'active',openDate:'',notes:''};
+  document.getElementById('biz-modal-title').textContent=id?'Editar negocio':'Nuevo negocio';
+  document.getElementById('biz-id').value=id||'';
+  document.getElementById('biz-name').value=t.name||'';
+  document.getElementById('biz-type').value=t.type||'restaurant';
+  document.getElementById('biz-currency').value=t.currency||'MXN';
+  document.getElementById('biz-status').value=t.status||'active';
+  document.getElementById('biz-opendate').value=t.openDate||'';
+  document.getElementById('biz-notes').value=t.notes||'';
+  document.getElementById('biz-modal').classList.add('open');
+}
+function closeBizModal(){ document.getElementById('biz-modal').classList.remove('open'); }
+
+function saveBusiness(){
+  const data=loadData();
+  const id=document.getElementById('biz-id').value;
+  const biz={
+    id: id||crypto.randomUUID(),
+    name: document.getElementById('biz-name').value.trim(),
+    type: document.getElementById('biz-type').value,
+    currency: document.getElementById('biz-currency').value,
+    status: document.getElementById('biz-status').value,
+    openDate: document.getElementById('biz-opendate').value,
+    notes: document.getElementById('biz-notes').value.trim(),
+    investments: [],
+    returns: [],
+  };
+  if(!biz.name){ flujoToast('Ingresa el nombre del negocio','err'); return; }
+  if(id){
+    const existing=data.businesses.find(b=>b.id===id);
+    if(existing){ biz.investments=existing.investments||[]; biz.returns=existing.returns||[]; }
+    data.businesses=data.businesses.map(b=>b.id===id?biz:b);
+  } else {
+    if(!data.businesses) data.businesses=[];
+    data.businesses.push(biz);
+  }
+  saveData(data); closeBizModal(); refresh();
+  flujoToast(id?'Negocio actualizado':'Negocio creado','ok');
+}
+function deleteBusiness(id){
+  if(!confirm('¿Eliminar este negocio?')) return;
+  const data=loadData();
+  // Also remove associated transactions
+  const biz=data.businesses.find(b=>b.id===id);
+  if(biz){
+    const txIds=new Set([...(biz.investments||[]).map(i=>i.txId),...(biz.returns||[]).map(r=>r.txId)].filter(Boolean));
+    data.transactions=data.transactions.filter(t=>!txIds.has(t.id));
+  }
+  data.businesses=data.businesses.filter(b=>b.id!==id);
+  saveData(data); refresh();
+  flujoToast('Negocio eliminado','ok');
+}
+
+// ── Aporte (investment contribution) ────────────────────────────────────
+function openBizInvestModal(bizId){
+  const data=loadData();
+  document.getElementById('biz-inv-biz-id').value=bizId;
+  document.getElementById('biz-inv-id').value='';
+  document.getElementById('biz-inv-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('biz-inv-amount').value='';
+  document.getElementById('biz-inv-desc').value='';
+  // Populate account select
+  const sel=document.getElementById('biz-inv-account');
+  sel.innerHTML=data.accounts.map(a=>`<option value="${a.id}">${a.icon||'🏦'} ${a.name} (${a.currency||'MXN'})</option>`).join('');
+  document.getElementById('biz-inv-modal').classList.add('open');
+}
+function closeBizInvModal(){ document.getElementById('biz-inv-modal').classList.remove('open'); }
+
+function saveBizInvestment(){
+  const data=loadData();
+  const bizId=document.getElementById('biz-inv-biz-id').value;
+  const biz=data.businesses.find(b=>b.id===bizId);
+  if(!biz){ flujoToast('Negocio no encontrado','err'); return; }
+  const amount=parseFloat(document.getElementById('biz-inv-amount').value);
+  if(!amount||amount<=0){ flujoToast('Ingresa un monto válido','err'); return; }
+  const accId=document.getElementById('biz-inv-account').value;
+  const acc=data.accounts.find(a=>a.id===accId);
+  const date=document.getElementById('biz-inv-date').value;
+  const desc=document.getElementById('biz-inv-desc').value.trim()||`Aporte: ${biz.name}`;
+  // Create expense transaction
+  const txId=crypto.randomUUID();
+  const tx={
+    id:txId, type:'expense', date, amount,
+    currency: acc?.currency||'MXN',
+    accountId: accId, category:'Inversión negocio',
+    description: desc, confirmed:true,
+  };
+  data.transactions.push(tx);
+  // Add investment record
+  if(!biz.investments) biz.investments=[];
+  biz.investments.push({
+    id:crypto.randomUUID(), date, amount,
+    currency: acc?.currency||'MXN',
+    accountId: accId, description: desc, txId,
+  });
+  saveData(data); closeBizInvModal(); refresh();
+  flujoToast(`Aporte de ${fmt(amount,acc?.currency||'MXN')} registrado`,'ok');
+}
+
+// ── Retorno (return) ─────────────────────────────────────────────────────
+function openBizReturnModal(bizId){
+  const data=loadData();
+  document.getElementById('biz-ret-biz-id').value=bizId;
+  document.getElementById('biz-ret-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('biz-ret-amount').value='';
+  document.getElementById('biz-ret-desc').value='';
+  const sel=document.getElementById('biz-ret-account');
+  sel.innerHTML=data.accounts.map(a=>`<option value="${a.id}">${a.icon||'🏦'} ${a.name} (${a.currency||'MXN'})</option>`).join('');
+  document.getElementById('biz-ret-modal').classList.add('open');
+}
+function closeBizRetModal(){ document.getElementById('biz-ret-modal').classList.remove('open'); }
+
+function saveBizReturn(){
+  const data=loadData();
+  const bizId=document.getElementById('biz-ret-biz-id').value;
+  const biz=data.businesses.find(b=>b.id===bizId);
+  if(!biz){ flujoToast('Negocio no encontrado','err'); return; }
+  const amount=parseFloat(document.getElementById('biz-ret-amount').value);
+  if(!amount||amount<=0){ flujoToast('Ingresa un monto válido','err'); return; }
+  const accId=document.getElementById('biz-ret-account').value;
+  const acc=data.accounts.find(a=>a.id===accId);
+  const date=document.getElementById('biz-ret-date').value;
+  const desc=document.getElementById('biz-ret-desc').value.trim()||`Retorno: ${biz.name}`;
+  // Create income transaction
+  const txId=crypto.randomUUID();
+  const tx={
+    id:txId, type:'income', date, amount,
+    currency: acc?.currency||'MXN',
+    accountId: accId, category:'Retorno negocio',
+    description: desc, confirmed:true,
+  };
+  data.transactions.push(tx);
+  // Add return record
+  if(!biz.returns) biz.returns=[];
+  biz.returns.push({
+    id:crypto.randomUUID(), date, amount,
+    currency: acc?.currency||'MXN',
+    accountId: accId, description: desc, txId,
+  });
+  saveData(data); closeBizRetModal(); refresh();
+  flujoToast(`Retorno de ${fmt(amount,acc?.currency||'MXN')} registrado`,'ok');
+}
+
+// ── Render ───────────────────────────────────────────────────────────────
+function renderBusinesses(data){
+  const el=document.getElementById('businesses-list');
+  if(!el) return;
+  const businesses=data.businesses||[];
+  if(!businesses.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">🏢</div><p>Sin negocios — agrega uno con el botón +</p></div>`;
+    return;
+  }
+  el.innerHTML=businesses.map(biz=>{
+    const bt=BUSINESS_TYPES[biz.type]||BUSINESS_TYPES.other;
+    const invested=getTotalInvested(biz);
+    const returned=getTotalReturned(biz);
+    const remaining=Math.max(0,invested-returned);
+    const roi=getROI(biz);
+    const monthly=getMonthlyAvgReturn(biz);
+    const breakEven=getBreakEvenDate(biz);
+    const pct=invested>0?Math.min(Math.round((returned/invested)*100),100):0;
+    const curr=biz.currency||'MXN';
+    const statusColor=biz.status==='active'?'var(--green)':biz.status==='paused'?'#f59e0b':'var(--red)';
+    const statusLabel=biz.status==='active'?'Activo':biz.status==='paused'?'Pausado':'Cerrado';
+    return `<div class="inv-card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:46px;height:46px;border-radius:14px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;">${bt.icon}</div>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-0.3px;">${biz.name}</div>
+            <div style="font-size:11px;color:var(--sub);margin-top:2px;">${bt.label}${biz.openDate?' · Desde '+new Date(biz.openDate+'T12:00:00').toLocaleDateString('es-MX',{month:'short',year:'numeric'}):''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:${statusColor}20;color:${statusColor};">${statusLabel}</span>
+          <button class="btn-sm btn-edit" onclick="openBusinessModal('${biz.id}')">✎</button>
+          <button class="btn-sm btn-del" onclick="deleteBusiness('${biz.id}')">✕</button>
+        </div>
+      </div>
+      <!-- Metrics grid -->
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;">
+        <div style="background:var(--paper);border-radius:10px;padding:12px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);margin-bottom:4px;">Total invertido</div>
+          <div style="font-family:var(--font-num);font-size:16px;font-weight:700;color:var(--red);">−${fmt(invested,curr)}</div>
+        </div>
+        <div style="background:var(--paper);border-radius:10px;padding:12px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);margin-bottom:4px;">Total recuperado</div>
+          <div style="font-family:var(--font-num);font-size:16px;font-weight:700;color:var(--green);">+${fmt(returned,curr)}</div>
+        </div>
+        <div style="background:var(--paper);border-radius:10px;padding:12px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);margin-bottom:4px;">ROI actual</div>
+          <div style="font-family:var(--font-num);font-size:16px;font-weight:700;color:${roi>=0?'var(--green)':'var(--red)'};">${roi}%</div>
+        </div>
+        <div style="background:var(--paper);border-radius:10px;padding:12px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);margin-bottom:4px;">Retorno prom./mes</div>
+          <div style="font-family:var(--font-num);font-size:16px;font-weight:700;color:var(--ink);">${monthly>0?fmt(monthly,curr):'—'}</div>
+        </div>
+      </div>
+      <!-- Recovery bar -->
+      <div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:5px;">
+          <span>Recuperación</span>
+          <span style="font-weight:700;color:${pct>=100?'var(--green)':'var(--ink)'};">${pct}%</span>
+        </div>
+        <div style="height:6px;background:var(--border);border-radius:99px;overflow:hidden;">
+          <div style="height:100%;border-radius:99px;width:${pct}%;background:${pct>=100?'var(--green)':'linear-gradient(90deg,var(--accent),#818cf8)'};transition:width .6s ease;"></div>
+        </div>
+        ${remaining>0?`<div style="font-size:11px;color:var(--sub);margin-top:5px;">Por recuperar: <span style="font-family:var(--font-num);font-weight:600;color:var(--ink);">${fmt(remaining,curr)}</span>${breakEven?` · Break-even: <span style="font-weight:600;color:var(--accent);">${breakEven}</span>`:''}</div>`:`<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:5px;">✓ Inversión recuperada</div>`}
+      </div>
+      <!-- History -->
+      ${(biz.investments||[]).length||( biz.returns||[]).length?`
+      <details style="margin-bottom:10px;">
+        <summary style="font-size:11px;font-weight:700;color:var(--sub);cursor:pointer;letter-spacing:0.5px;text-transform:uppercase;padding:4px 0;">Historial (${(biz.investments||[]).length} aportes · ${(biz.returns||[]).length} retornos)</summary>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;">
+          ${[...(biz.investments||[]).map(i=>({...i,_type:'inv'})),...(biz.returns||[]).map(r=>({...r,_type:'ret'}))].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(item=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--paper);border-radius:8px;font-size:12px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="color:${item._type==='inv'?'var(--red)':'var(--green)'};">${item._type==='inv'?'↓':'↑'}</span>
+                <div>
+                  <div style="font-weight:500;">${item.description||''}</div>
+                  <div style="font-size:10px;color:var(--sub);">${item.date}</div>
+                </div>
+              </div>
+              <div style="font-family:var(--font-num);font-weight:700;color:${item._type==='inv'?'var(--red)':'var(--green)'};">${item._type==='inv'?'−':'+'}${fmt(item.amount,item.currency)}</div>
+            </div>`).join('')}
+        </div>
+      </details>`:''}
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;">
+        <button onclick="openBizInvestModal('${biz.id}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:10px;border:1px solid rgba(220,38,38,0.3);background:rgba(220,38,38,0.06);color:var(--red);font-family:var(--font-text);font-size:13px;font-weight:600;cursor:pointer;">↓ Nuevo aporte</button>
+        <button onclick="openBizReturnModal('${biz.id}')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:10px;border:1px solid rgba(22,163,74,0.3);background:rgba(22,163,74,0.06);color:var(--green);font-family:var(--font-text);font-size:13px;font-weight:600;cursor:pointer;">↑ Registrar retorno</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 // Auto-open quick menu on mobile
 (function(){
   var _tryOpen = function(){
@@ -8782,5 +9074,140 @@ function _initFonts() {
     </button>
   </div>
 </div>
+
+  <!-- ── NEGOCIOS VIEW ── -->
+  <div id="view-businesses" class="view">
+    <div class="topbar">
+      <div class="page-title">Negocios <em>e inversiones</em></div>
+      <div class="topbar-right">
+        <button class="btn-primary" onclick="openBusinessModal()"><span>+</span> Nuevo negocio</button>
+      </div>
+    </div>
+    <div class="content">
+      <div id="businesses-list"></div>
+    </div>
+  </div>
+
+  <!-- ── BUSINESS MODAL ── -->
+  <div class="modal-overlay" id="biz-modal">
+    <div class="modal">
+      <div class="modal-title" id="biz-modal-title">Nuevo negocio</div>
+      <input type="hidden" id="biz-id">
+      <div class="form-group">
+        <label class="form-label">Nombre del negocio</label>
+        <input class="form-input" id="biz-name" placeholder="Ej. Restaurante El Patio">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" id="biz-type">
+            <option value="restaurant">🍽️ Restaurante</option>
+            <option value="bar">🍺 Bar</option>
+            <option value="cafe">☕ Cafetería</option>
+            <option value="laundry">👕 Lavandería</option>
+            <option value="other">🏢 Otro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Moneda base</label>
+          <select class="form-select" id="biz-currency">
+            <option value="MXN">MXN</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="USDT">USDT</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="biz-status">
+            <option value="active">Activo</option>
+            <option value="paused">Pausado</option>
+            <option value="closed">Cerrado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de apertura</label>
+          <input class="form-input" id="biz-opendate" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notas</label>
+        <textarea class="form-textarea" id="biz-notes" placeholder="Descripción, socios, ubicación..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeBizModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveBusiness()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── APORTE MODAL ── -->
+  <div class="modal-overlay" id="biz-inv-modal">
+    <div class="modal">
+      <div class="modal-title">Nuevo aporte de capital</div>
+      <input type="hidden" id="biz-inv-biz-id">
+      <input type="hidden" id="biz-inv-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input class="form-input" id="biz-inv-date" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monto</label>
+          <input class="form-input" id="biz-inv-amount" type="number" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cuenta (de dónde sale)</label>
+        <select class="form-select" id="biz-inv-account"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <input class="form-input" id="biz-inv-desc" placeholder="Ej. Equipamiento cocina, remodelación...">
+      </div>
+      <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--sub);">
+        ⚡ Este aporte se registrará como <strong>gasto</strong> en la cuenta seleccionada y como <strong>inversión</strong> en el negocio.
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeBizInvModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveBizInvestment()">Registrar aporte</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RETORNO MODAL ── -->
+  <div class="modal-overlay" id="biz-ret-modal">
+    <div class="modal">
+      <div class="modal-title">Registrar retorno</div>
+      <input type="hidden" id="biz-ret-biz-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha</label>
+          <input class="form-input" id="biz-ret-date" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monto</label>
+          <input class="form-input" id="biz-ret-amount" type="number" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cuenta (a dónde entra)</label>
+        <select class="form-select" id="biz-ret-account"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <input class="form-input" id="biz-ret-desc" placeholder="Ej. Ganancias julio, distribución mensual...">
+      </div>
+      <div style="background:rgba(22,163,74,0.06);border:1px solid rgba(22,163,74,0.2);border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--sub);">
+        ⚡ Este retorno se registrará como <strong>ingreso</strong> en la cuenta seleccionada.
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeBizRetModal()">Cancelar</button>
+        <button class="btn-save" onclick="saveBizReturn()">Registrar retorno</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
